@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRYDE Leadership Simulation</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen active">
+        <div class="container">
+            <h1>STRYDE Athletics</h1>
+            <div class="loading-spinner"></div>
+            <p>Checking for saved progress...</p>
+        </div>
+    </div>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="screen">
+        <div class="container">
+            <h1>STRYDE Athletics Leadership Simulation</h1>
+            <div class="welcome-content">
+                <h2>Welcome, Team Leader</h2>
+                <p>You have been appointed as the <strong>Team Leader</strong> for the STRYDE PULSE product launch—a new line of eco-engineered running shoes.</p>
+                
+                <div class="info-box">
+                    <h3>Your Mission</h3>
+                    <p>Lead a cross-functional team through critical leadership communication scenarios. Your decisions will shape team dynamics, stakeholder relationships, and project outcomes.</p>
+                </div>
+
+                <div class="info-box">
+                    <h3>What to Expect</h3>
+                    <ul>
+                        <li><strong>20 Scenarios:</strong> Navigate real-world leadership challenges</li>
+                        <li><strong>AI Evaluation:</strong> Receive instant feedback on your communication</li>
+                        <li><strong>Adaptive Pathways:</strong> Your responses shape the story</li>
+                        <li><strong>60-90 minutes:</strong> Complete at your own pace</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>Your Team</h3>
+                    <ul>
+                        <li><strong>Dr. Keisha Ramdial</strong> - Product Innovation Lead (R&D)</li>
+                        <li><strong>Andre Baptiste</strong> - Marketing & Brand Strategist</li>
+                        <li><strong>Malik Joseph</strong> - Supply Chain & Operations Manager</li>
+                        <li><strong>Sadie Persad</strong> - HR & People Experience Partner</li>
+                        <li><strong>Tristen Thompson</strong> - Finance & Strategy Analyst</li>
+                    </ul>
+                </div>
+
+                <button id="start-simulation" class="btn btn-primary">Start Simulation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simulation Screen -->
+    <div id="simulation-screen" class="screen">
+        <div class="container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="scenario-counter" id="scenario-counter">Scenario 1 of 20</div>
+
+            <div id="scenario-content" class="scenario-content">
+                <!-- Scenario content will be dynamically inserted here -->
+            </div>
+
+            <div class="response-section">
+                <label for="response-input">Your Response:</label>
+                <textarea 
+                    id="response-input" 
+                    class="response-input" 
+                    placeholder="Type your response here... Consider your communication style, tone, and the leadership principles from LEAD 3000."
+                    rows="10"
+                ></textarea>
+                
+                <div class="button-group">
+                    <button id="submit-response" class="btn btn-primary">Submit Response</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Screen -->
+    <div id="feedback-screen" class="screen">
+        <div class="container">
+            <h2>Response Evaluation</h2>
+            
+            <div id="feedback-content" class="feedback-content">
+                <!-- Feedback will be dynamically inserted here -->
+            </div>
+
+            <div class="button-group">
+                <button id="next-scenario" class="btn btn-primary">Continue to Next Scenario</button>
+                <button id="finish-simulation" class="btn btn-secondary" style="display: none;">View Final Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/ai-integration.js"></script>
+    <script src="js/scenarios.js"></script>
+    <script src="js/simulation.js"></script>
+</body>
+</html>
