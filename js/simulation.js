@@ -479,13 +479,13 @@ class LeadershipSimulation {
     checkForSavedProgress() {
         const savedProgress = StorageManager.loadProgress();
         
-        if (savedProgress && savedProgress.responses.length > 0) {
+        if (savedProgress && savedProgress.responses && savedProgress.responses.length > 0) {
             const resume = confirm(
                 `Welcome back! You have saved progress from ${new Date(savedProgress.lastSaved).toLocaleString()}.\n\n` +
                 `You were on Scenario ${savedProgress.currentScenarioIndex + 1} of ${ScenarioData.scenarios.length}.\n\n` +
                 `Would you like to resume where you left off?`
             );
-
+    
             if (resume) {
                 this.currentScenarioIndex = savedProgress.currentScenarioIndex;
                 this.responses = savedProgress.responses;
@@ -495,9 +495,12 @@ class LeadershipSimulation {
                 this.loadScenario(this.currentScenarioIndex);
                 this.showScreen('scenario-screen');
             }
+        } else {
+            // No saved progress - this is expected for first run
+            console.log('No saved progress to resume');
         }
     }
-
+    
     showScreen(screenId) {
         // Hide all screens
         document.querySelectorAll('.screen').forEach(screen => {
@@ -516,3 +519,4 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
