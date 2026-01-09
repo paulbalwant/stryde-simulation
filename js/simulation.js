@@ -1,903 +1,518 @@
 /**
- * STRYDE Simulation - Main Application Logic
- * Coordinates the entire simulation flow
+ * STRYDE Leadership Simulation - Main Application
+ * Enhanced with all features: progress tracking, word count, personalization, navigation
  */
 
-const SimulationApp = {
-    // State management
-    state: {
-        currentScenarioIndex: 0,
-        scenarios: [],
-        responses: [],
-        scenarioHistory: [],
-        evaluations: [],
-        isProcessing: false,
-        startTime: null
-    },
+class LeadershipSimulation {
+    constructor() {
+        this.currentScenarioIndex = 0;
+        this.responses = [];
+        this.studentName = '';
+        this.startTime = null;
+        
+        this.init();
+    }
 
-	/**
-	 * Initialize the simulation
-	 */
-	async init() {
-		console.log('Initializing STRYDE Simulation...');
-		
-		try {
-			this.showScreen('loading-screen');
-			
-			// Test AI connection
-			const aiConnected = await AIIntegration.testConnection(); // ← FIXED
-			
-			if (!aiConnected) {
-				console.warn('AI service not available - using fallback evaluation');
-			}
-			
-			// Load scenarios
-			this.state.scenarios = ScenarioData.scenarios;
-			console.log(`Loaded ${this.state.scenarios.length} scenarios`);
-			
-			// Setup event listeners
-			this.setupEventListeners();
-			
-			// Check for saved progress
-			const savedProgress = StorageManager.loadProgress();
-			
-			if (savedProgress) {
-				console.log('Found saved progress');
-				// Could add option to resume here
-				// For now, just start fresh
-				StorageManager.clearProgress();
-			}
-			
-			// Show welcome screen
-			this.showScreen('welcome-screen');
-			
-			console.log('✓ Initialization complete');
-			
-		} catch (error) {
-			console.error('Initialization error:', error);
-			console.error('Error name:', error.name);
-			console.error('Error message:', error.message);
-			console.error('Error stack:', error.stack);
-			
-			// Show error screen
-			this.showAIConnectionError();
-		}
-	},
+    init() {
+        console.log('Initializing STRYDE Leadership Simulation...');
+        
+        // Show loading screen briefly
+        this.showScreen('loading-screen');
+        
+        // Simulate loading time
+        setTimeout(() => {
+            this.showScreen('welcome-screen');
+            this.setupEventListeners();
+            this.checkForSavedProgress();
+        }, 1500);
+    }
 
-	/**
-	 * Setup all event listeners with null checks
-	 */
-	setupEventListeners() {
-		console.log('Setting up event listeners...');
-		
-		// Start simulation button
-		const startBtn = document.getElementById('start-simulation');
-		if (startBtn) {
-			startBtn.addEventListener('click', () => this.startSimulation());
-			console.log('✓ Start button listener added');
-		} else {
-			console.error('❌ Start button not found');
-		}
+    setupEventListeners() {
+        // Welcome screen
+        const startBtn = document.getElementById('start-simulation');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.startSimulation());
+        }
 
-		// Submit response button
-		const submitBtn = document.getElementById('submit-response');
-		if (submitBtn) {
-			submitBtn.addEventListener('click', () => this.submitResponse());
-			console.log('✓ Submit button listener added');
-		} else {
-			console.error('❌ Submit button not found');
-		}
+        // Handbook toggle
+        const handbookToggle = document.getElementById('toggle-handbook');
+        if (handbookToggle) {
+            handbookToggle.addEventListener('click', () => this.toggleHandbook());
+        }
 
-		// Next scenario button
-		const nextBtn = document.getElementById('next-scenario');
-		if (nextBtn) {
-			nextBtn.addEventListener('click', () => this.nextScenario());
-			console.log('✓ Next button listener added');
-		} else {
-			console.error('❌ Next button not found');
-		}
+        // Scenario response submission
+        const submitBtn = document.getElementById('submit-response');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', () => this.submitResponse());
+        }
 
-		// Finish simulation button
-		const finishBtn = document.getElementById('finish-simulation');
-		if (finishBtn) {
-			finishBtn.addEventListener('click', () => this.finishSimulation());
-			console.log('✓ Finish button listener added');
-		} else {
-			console.error('❌ Finish button not found');
-		}
+        // Response textarea word count
+        const responseInput = document.getElementById('response-input');
+        if (responseInput) {
+            responseInput.addEventListener('input', () => this.updateWordCount());
+        }
 
-		console.log('Event listeners setup complete');
-	},
+        // Navigation buttons
+        const nextBtn = document.getElementById('next-scenario');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => this.nextScenario());
+        }
 
-    /**
-     * Start new simulation
-     */
+        const restartBtn = document.getElementById('restart-simulation');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => this.restartSimulation());
+        }
+
+        // Save progress periodically
+        setInterval(() => this.saveProgress(), 30000); // Every 30 seconds
+    }
+
+    toggleHandbook() {
+        const content = document.getElementById('handbook-content');
+        const button = document.getElementById('toggle-handbook');
+        
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            button.textContent = '▲ Hide Leadership Handbook';
+        } else {
+            content.style.display = 'none';
+            button.textContent = '▼ Show Leadership Handbook';
+        }
+    }
+
     startSimulation() {
-        // Clear any previous progress
+        // Get student name (optional)
+        const nameInput = document.getElementById('student-name');
+        this.studentName = nameInput ? nameInput.value.trim() : '';
+        
+        // Default to "Team Leader" if no name provided
+        if (!this.studentName) {
+            this.studentName = 'Team Leader';
+        }
+
+        this.startTime = new Date();
+        this.currentScenarioIndex = 0;
+        this.responses = [];
+        
+        // Clear any saved progress
         StorageManager.clearProgress();
         
-        // Reset state
-        this.state.currentScenarioIndex = 0;
-        this.state.responses = [];
-        this.state.scenarioHistory = [];
-        this.state.evaluations = [];
-        this.state.startTime = new Date().toISOString();
-        
-        // Show first scenario
-        this.showScreen('simulation-screen');
+        // Load first scenario
         this.loadScenario(0);
-    },
+        this.showScreen('scenario-screen');
+    }
 
-    /**
-     * Resume saved simulation
-     */
-    resumeSimulation() {
-        const savedData = StorageManager.loadProgress();
-        
-        if (!savedData) {
-            alert('No saved progress found. Starting new simulation.');
-            this.startSimulation();
+    loadScenario(index) {
+        const scenario = ScenarioData.scenarios[index];
+        if (!scenario) {
+            console.error('Scenario not found:', index);
             return;
         }
 
-        // Restore state
-        this.state.currentScenarioIndex = savedData.currentScenario;
-        this.state.responses = savedData.responses;
-        this.state.scenarioHistory = savedData.scenarioHistory;
-		this.state.evaluations = savedData.evaluations || [];
-        this.state.startTime = savedData.startTime;
-        
-		console.log('Resumed from scenario', savedData.currentScenario);
-		console.log('Restored', this.state.evaluations.length, 'evaluations');
-		console.log('Restored', this.state.responses.length, 'responses');
-		
-        // Show simulation screen
-        this.showScreen('simulation-screen');
-        this.loadScenario(savedData.currentScenario);
-        
-        console.log('Resumed from scenario', savedData.currentScenario);
-    },
+        console.log(`Loading scenario ${index + 1}: ${scenario.title}`);
 
-	/**
-	 * Load a scenario
-	 */
-	loadScenario(index) {
-		console.log('Loading scenario:', this.state.scenarios[index].title);
-		
-		this.state.currentScenarioIndex = index;
-		const scenario = this.state.scenarios[index];
-		
-		const scenarioContent = document.getElementById('scenario-content');
-		if (scenarioContent) {
-			scenarioContent.innerHTML = `
-				<div class="scenario-header">
-					<span class="scenario-type">${scenario.type}</span>
-					<h2>${scenario.title}</h2>
-				</div>
-				
-				<div class="scenario-text">
-					${scenario.text.split('\n\n').map(para => `<p>${para}</p>`).join('')}
-				</div>
-				
-				${scenario.learningObjectives ? `
-					<div class="learning-objectives">
-						<h3>Learning Objectives:</h3>
-						<ul>
-							${scenario.learningObjectives.map(obj => `<li>${obj}</li>`).join('')}
-						</ul>
-					</div>
-				` : ''}
-			`;
-		}
-		
-		// Clear previous response
-		const responseInput = document.getElementById('response-input');
-		if (responseInput) {
-			responseInput.value = '';
-		}
-		
-		// Update progress bar
-		this.updateProgressBar();
-	},
+        // Update progress bar
+        this.updateProgressBar();
 
-    /**
-     * Build HTML for scenario display
-     * @param {Object} scenario - Scenario object
-     * @returns {string} HTML string
-     */
-    buildScenarioHTML(scenario) {
-        return `
-            <div class="scenario-header">
-                <span class="scenario-type">${scenario.type}</span>
-                <h2>${scenario.title}</h2>
-            </div>
+        // Update scenario type badge
+        const typeBadge = document.getElementById('scenario-type');
+        if (typeBadge) {
+            typeBadge.textContent = scenario.type === 'major' ? 'Major Scenario' : 
+                                   scenario.type === 'micro' ? 'Micro Scenario' : 
+                                   'AI-Adaptive Scenario';
+        }
+
+        // Update scenario title
+        const titleElement = document.getElementById('scenario-title');
+        if (titleElement) {
+            titleElement.textContent = scenario.title;
+        }
+
+        // Update scenario character (if applicable)
+        const characterSection = document.querySelector('.scenario-character');
+        if (characterSection) {
+            if (scenario.characterName) {
+                characterSection.style.display = 'flex';
+                
+                const characterImg = characterSection.querySelector('img');
+                const characterName = characterSection.querySelector('h3');
+                const characterRole = characterSection.querySelector('p');
+                
+                if (characterImg) {
+                    characterImg.src = `images/${scenario.characterImage}`;
+                    characterImg.alt = scenario.characterName;
+                }
+                if (characterName) characterName.textContent = scenario.characterName;
+                if (characterRole) characterRole.textContent = scenario.characterRole;
+            } else {
+                characterSection.style.display = 'none';
+            }
+        }
+
+        // Update scenario text with personalization
+        const scenarioText = document.getElementById('scenario-text');
+        if (scenarioText) {
+            // Replace generic references with student's name
+            let personalizedText = scenario.text;
             
-            <div class="scenario-body">
-                <div class="scenario-context">
-                    <strong>📋 Context:</strong>
-                    <p>${scenario.context}</p>
-                </div>
-                
-                <div class="scenario-situation">
-                    <strong>🎯 Situation:</strong>
-                    <p>${scenario.situation}</p>
-                </div>
-                
-                <div class="scenario-prompt">
-                    <strong>✍️ Your Task:</strong>
-                    <p>${scenario.prompt}</p>
-                </div>
-                
-                ${scenario.expectedWordRange ? `
-                    <p class="text-secondary mt-md">
-                        <em>Recommended length: ${scenario.expectedWordRange[0]}-${scenario.expectedWordRange[1]} words</em>
-                    </p>
-                ` : ''}
-            </div>
-        `;
-    },
+            // Add personalized greeting for first scenario
+            if (index === 0 && this.studentName !== 'Team Leader') {
+                personalizedText = `Good morning, ${this.studentName}!\n\n` + personalizedText;
+            }
+            
+            scenarioText.innerHTML = this.formatScenarioText(personalizedText);
+        }
 
-    /**
-     * Submit current response
-     */
-	async submitResponse() {
-		const responseText = document.getElementById('response-input').value.trim();
-		
-		if (!responseText) {
-			alert('Please enter a response before submitting.');
-			return;
-		}
+        // Update learning objectives
+        const objectivesList = document.getElementById('learning-objectives-list');
+        if (objectivesList && scenario.learningObjectives) {
+            objectivesList.innerHTML = scenario.learningObjectives
+                .map(obj => `<li>${obj}</li>`)
+                .join('');
+        }
 
-		if (this.state.isProcessing) {
-			console.log('Already processing, ignoring submit');
-			return;
-		}
+        // Clear previous response
+        const responseInput = document.getElementById('response-input');
+        if (responseInput) {
+            responseInput.value = '';
+            this.updateWordCount();
+        }
 
-		this.state.isProcessing = true;
+        // Enable submit button
+        const submitBtn = document.getElementById('submit-response');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Response';
+        }
 
-		try {
-			const scenario = this.state.scenarios[this.state.currentScenarioIndex];
-			
-			// Show processing state
-			const submitButton = document.getElementById('submit-response');
-			const originalText = submitButton.textContent;
-			submitButton.textContent = 'Evaluating...';
-			submitButton.disabled = true;
+        // Check if this is an AI-generated scenario
+        if (scenario.isAIGenerated) {
+            this.generateAIScenario(scenario);
+        }
+    }
 
-			console.log('Requesting AI evaluation...');
+    formatScenarioText(text) {
+        // Convert markdown-style formatting to HTML
+        let formatted = text;
+        
+        // Bold text (**text**)
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Bullet points (• item)
+        formatted = formatted.replace(/^• (.+)$/gm, '<li>$1</li>');
+        
+        // Wrap lists in <ul> tags
+        formatted = formatted.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+        
+        // Paragraphs
+        formatted = formatted.split('\n\n').map(para => {
+            if (para.trim() && !para.includes('<ul>') && !para.includes('<li>')) {
+                return `<p>${para.trim()}</p>`;
+            }
+            return para;
+        }).join('\n');
+        
+        return formatted;
+    }
 
-			// Call AI evaluation - PASS THE SCENARIO TEXT, NOT THE OBJECT
-			const evaluation = await AIIntegration.evaluateResponse(
-				scenario.text,                    // ← FIX: Use scenario.text (string)
-				responseText,
-				scenario.learningObjectives || [] // ← FIX: Provide default empty array
-			);
+    updateProgressBar() {
+        const totalScenarios = ScenarioData.scenarios.length;
+        const currentScenario = this.currentScenarioIndex + 1;
+        const percentage = Math.round((currentScenario / totalScenarios) * 100);
 
-			console.log('Evaluation received:', evaluation);
+        // Update progress bar fill
+        const progressFill = document.querySelector('.progress-bar-fill');
+        if (progressFill) {
+            progressFill.style.width = `${percentage}%`;
+            progressFill.textContent = `${percentage}%`;
+        }
 
-			// Store the response and evaluation
-			this.state.responses.push(responseText);
-			this.state.evaluations.push(evaluation);
-			
-			// Add to scenario history
-			this.state.scenarioHistory.push({
-				scenarioIndex: this.state.currentScenarioIndex,
-				scenarioTitle: scenario.title,
-				response: responseText,
-				evaluation: evaluation,
-				timestamp: new Date().toISOString()
-			});
+        // Update counter
+        const counter = document.getElementById('scenario-counter');
+        if (counter) {
+            counter.textContent = `Scenario ${currentScenario} of ${totalScenarios}`;
+        }
 
-			// Save progress
-			StorageManager.saveProgress({
-				currentScenarioIndex: this.state.currentScenarioIndex,
-				responses: this.state.responses,
-				evaluations: this.state.evaluations,
-				scenarioHistory: this.state.scenarioHistory,
-				startTime: this.state.startTime
-			});
+        // Update percentage text
+        const percentageText = document.getElementById('progress-percentage');
+        if (percentageText) {
+            percentageText.textContent = `${percentage}% Complete`;
+        }
+    }
 
-			// Show feedback
-			this.showFeedback(evaluation);
+    updateWordCount() {
+        const responseInput = document.getElementById('response-input');
+        const wordCountDisplay = document.getElementById('word-count');
+        
+        if (!responseInput || !wordCountDisplay) return;
 
-			// Reset button
-			submitButton.textContent = originalText;
-			submitButton.disabled = false;
+        const text = responseInput.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
 
-		} catch (error) {
-			console.error('Error submitting response:', error);
-			alert('An error occurred while processing your response. Please try again.');
-			
-			// Reset button on error
-			const submitButton = document.getElementById('submit-response');
-			submitButton.textContent = 'Submit Response';
-			submitButton.disabled = false;
-		} finally {
-			this.state.isProcessing = false;
-		}
-	},
+        wordCountDisplay.textContent = `${wordCount} words`;
 
-	/**
-	 * Show feedback screen with evaluation results
-	 */
-	showFeedback(evaluation) {
-		const feedbackContent = document.getElementById('feedback-content');
-		
-		if (feedbackContent) {
-			// Determine score color
-			let scoreColor = '#dc3545'; // red for poor
-			if (evaluation.score >= 4) scoreColor = '#28a745'; // green for excellent
-			else if (evaluation.score >= 3) scoreColor = '#ffc107'; // yellow for good
-			
-			// Star rating
-			const stars = '★'.repeat(evaluation.score) + '☆'.repeat(5 - evaluation.score);
-			
-			feedbackContent.innerHTML = `
-				<div class="evaluation-summary">
-					<div class="score-display" style="color: ${scoreColor};">
-						<div class="score-number">${evaluation.score}/5</div>
-						<div class="score-stars">${stars}</div>
-					</div>
-				</div>
-				
-				<div class="feedback-section">
-					<h3>✅ What You Did Well:</h3>
-					<p>${evaluation.feedback}</p>
-				</div>
-				
-				<div class="feedback-section">
-					<h3>💡 Suggestions for Improvement:</h3>
-					<p>${evaluation.suggestions}</p>
-				</div>
-				
-				<div class="scenario-info">
-					<p><strong>Scenario ${this.state.currentScenarioIndex + 1} of ${this.state.scenarios.length}</strong></p>
-				</div>
-			`;
-		}
-		
-		// Show/hide navigation buttons based on progress
-		const nextBtn = document.getElementById('next-scenario');
-		const finishBtn = document.getElementById('finish-simulation');
-		
-		if (this.state.currentScenarioIndex < this.state.scenarios.length - 1) {
-			// More scenarios remain
-			if (nextBtn) nextBtn.style.display = 'inline-block';
-			if (finishBtn) finishBtn.style.display = 'none';
-		} else {
-			// Last scenario completed
-			if (nextBtn) nextBtn.style.display = 'none';
-			if (finishBtn) finishBtn.style.display = 'inline-block';
-		}
-		
-		// Show feedback screen
-		this.showScreen('feedback-screen');
-	},
+        // Color coding
+        if (wordCount < 50) {
+            wordCountDisplay.style.color = '#dc3545'; // Red
+        } else if (wordCount < 100) {
+            wordCountDisplay.style.color = '#ffc107'; // Yellow
+        } else {
+            wordCountDisplay.style.color = '#28a745'; // Green
+        }
+    }
 
-	/**
-	 * Move to next scenario
-	 */
-	nextScenario() {
-		if (this.state.currentScenarioIndex < this.state.scenarios.length - 1) {
-			this.loadScenario(this.state.currentScenarioIndex + 1);
-			this.showScreen('simulation-screen');
-		} else {
-			console.log('No more scenarios');
-		}
-	},
+    async submitResponse() {
+        const responseInput = document.getElementById('response-input');
+        const submitBtn = document.getElementById('submit-response');
+        
+        if (!responseInput || !submitBtn) return;
 
-	/**
-	 * Finish the simulation and show final results
-	 */
-	finishSimulation() {
-		console.log('Simulation complete!');
-		
-		// Calculate average score
-		const avgScore = this.state.evaluations.reduce((sum, eval) => sum + eval.score, 0) / this.state.evaluations.length;
-		
-		const feedbackContent = document.getElementById('feedback-content');
-		if (feedbackContent) {
-			feedbackContent.innerHTML = `
-				<div class="completion-message">
-					<h2>🎉 Simulation Complete!</h2>
-					<p>You have completed all ${this.state.scenarios.length} scenarios.</p>
-					
-					<div class="final-stats">
-						<h3>Your Performance:</h3>
-						<p><strong>Average Score:</strong> ${avgScore.toFixed(1)}/5</p>
-						<p><strong>Scenarios Completed:</strong> ${this.state.evaluations.length}</p>
-					</div>
-					
-					<button class="btn btn-primary" onclick="location.reload()">Start New Simulation</button>
-				</div>
-			`;
-		}
-		
-		// Clear saved progress
-		StorageManager.clearProgress();
-	},
+        const responseText = responseInput.value.trim();
 
-    /**
-     * Generate and display final feedback
-     */
-    async generateFinalFeedback() {
-        this.showScreen('loading-screen');
-        this.updateLoadingStatus('Generating your personalized feedback report...');
+        // Validation
+        if (!responseText) {
+            alert('Please write a response before submitting.');
+            return;
+        }
+
+        if (responseText.split(/\s+/).length < 30) {
+            const proceed = confirm('Your response is quite short (less than 30 words). Are you sure you want to submit?');
+            if (!proceed) return;
+        }
+
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Evaluating...';
 
         try {
-            // Calculate competency scores
-            const competencyScores = this.calculateCompetencyScores();
-            
-            // Generate summary feedback
-            const summaryFeedback = await AIIntegration.generateSummaryFeedback(
-                this.state.evaluations,
-                competencyScores
-            );
-            
-            // Build feedback HTML
-            const feedbackHTML = this.buildFeedbackHTML(competencyScores, summaryFeedback);
-            document.getElementById('feedback-content').innerHTML = feedbackHTML;
-            
-            // Save feedback
-            const feedbackData = {
-                evaluations: this.state.evaluations,
-                competencyScores: competencyScores,
-                summaryFeedback: summaryFeedback,
-                responses: this.state.responses,
-                completionTime: new Date().toISOString(),
-                startTime: this.state.startTime
-            };
-            
-            StorageManager.saveFeedback(feedbackData);
-            
-            // Show feedback screen
-            this.showScreen('feedback-screen');
-            
-        } catch (error) {
-            console.error('Error generating feedback:', error);
-            alert('An error occurred while generating feedback.');
-        }
-    },
+            // Get current scenario
+            const scenario = ScenarioData.scenarios[this.currentScenarioIndex];
 
-    /**
-     * Calculate competency scores from evaluations
-     * @returns {Object} Competency scores
-     */
-    calculateCompetencyScores() {
-        const competencies = {
-            'Emotional Intelligence': [],
-            'Persuasion & Influence': [],
-            'Strategic Communication': [],
-            'Crisis Leadership': [],
-            'Inclusive Leadership': []
-        };
+            // Get AI evaluation
+            const evaluation = await evaluateResponse(scenario, responseText, this.studentName);
 
-        // Map concepts to competencies
-        this.state.evaluations.forEach(eval => {
-            eval.conceptsEvaluated.forEach(concept => {
-                const lowerConcept = concept.toLowerCase();
-                
-                if (lowerConcept.includes('emotional') || lowerConcept.includes('empathy') || 
-                    lowerConcept.includes('self-awareness') || lowerConcept.includes('self-regulation')) {
-                    competencies['Emotional Intelligence'].push(eval.score);
-                }
-                
-                if (lowerConcept.includes('persuasion') || lowerConcept.includes('influence')) {
-                    competencies['Persuasion & Influence'].push(eval.score);
-                }
-                
-                if (lowerConcept.includes('strategic') || lowerConcept.includes('vision')) {
-                    competencies['Strategic Communication'].push(eval.score);
-                }
-                
-                if (lowerConcept.includes('crisis') || lowerConcept.includes('conflict')) {
-                    competencies['Crisis Leadership'].push(eval.score);
-                }
-                
-                if (lowerConcept.includes('inclusive') || lowerConcept.includes('active listening')) {
-                    competencies['Inclusive Leadership'].push(eval.score);
-                }
+            // Store response
+            this.responses.push({
+                scenarioId: scenario.id,
+                scenarioTitle: scenario.title,
+                response: responseText,
+                evaluation: evaluation,
+                timestamp: new Date()
             });
-        });
 
-        // Calculate averages as percentages
-        const scores = {};
-        Object.keys(competencies).forEach(comp => {
-            const values = competencies[comp];
-            if (values.length > 0) {
-                const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-                scores[comp] = (avg / 5) * 100;
+            // Save progress
+            this.saveProgress();
+
+            // Show feedback
+            this.showFeedback(evaluation, scenario);
+
+        } catch (error) {
+            console.error('Error evaluating response:', error);
+            alert('There was an error processing your response. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Response';
+        }
+    }
+
+    showFeedback(evaluation, scenario) {
+        // Populate feedback content
+        const strengthsElement = document.getElementById('feedback-strengths');
+        const suggestionsElement = document.getElementById('feedback-suggestions');
+
+        if (strengthsElement) {
+            strengthsElement.innerHTML = `<p>${evaluation.strengths || 'Great effort on this response!'}</p>`;
+        }
+
+        if (suggestionsElement) {
+            suggestionsElement.innerHTML = `<p>${evaluation.suggestions || 'Continue practicing your leadership communication skills.'}</p>`;
+        }
+
+        // Update scenario info
+        const scenarioInfo = document.querySelector('.scenario-info');
+        if (scenarioInfo) {
+            const totalScenarios = ScenarioData.scenarios.length;
+            const nextScenario = this.currentScenarioIndex + 2;
+            
+            if (nextScenario <= totalScenarios) {
+                scenarioInfo.innerHTML = `
+                    <strong>Progress:</strong> You've completed ${this.currentScenarioIndex + 1} of ${totalScenarios} scenarios.<br>
+                    <strong>Next:</strong> Scenario ${nextScenario} - ${ScenarioData.scenarios[this.currentScenarioIndex + 1]?.title || 'Final Report'}
+                `;
             } else {
-                scores[comp] = 0;
-            }
-        });
-
-        return scores;
-    },
-
-    /**
-     * Build feedback HTML
-     * @param {Object} competencyScores - Competency scores
-     * @param {string} summaryFeedback - Summary feedback text
-     * @returns {string} HTML string
-     */
-    buildFeedbackHTML(competencyScores, summaryFeedback) {
-        const avgScore = this.state.evaluations.reduce((sum, e) => sum + e.score, 0) / 
-                         this.state.evaluations.length;
-        const percentageScore = (avgScore / 5) * 100;
-        const totalPoints = this.state.evaluations.reduce((sum, e) => sum + e.score, 0);
-        const maxPoints = this.state.evaluations.length * 5;
-
-        let html = `
-            <div class="feedback-summary">
-                <h2>Overall Performance</h2>
-                <div class="overall-score">${percentageScore.toFixed(1)}%</div>
-                <p>${totalPoints} out of ${maxPoints} points</p>
-                <p>Average Score: ${avgScore.toFixed(2)}/5</p>
-            </div>
-
-            <div class="competency-breakdown">
-                <h3>Competency Breakdown</h3>
-                <div class="competency-grid">
-        `;
-
-        Object.entries(competencyScores).forEach(([comp, score]) => {
-            if (score > 0) {
-                html += `
-                    <div class="competency-card">
-                        <div class="competency-score">${score.toFixed(1)}%</div>
-                        <div class="competency-name">${comp}</div>
-                    </div>
+                scenarioInfo.innerHTML = `
+                    <strong>Congratulations!</strong> You've completed all ${totalScenarios} scenarios!
                 `;
             }
-        });
+        }
 
-        html += `
+        // Show feedback screen
+        this.showScreen('feedback-screen');
+    }
+
+    nextScenario() {
+        this.currentScenarioIndex++;
+
+        if (this.currentScenarioIndex >= ScenarioData.scenarios.length) {
+            // Finished all scenarios
+            this.showFinalReport();
+        } else {
+            // Load next scenario
+            this.loadScenario(this.currentScenarioIndex);
+            this.showScreen('scenario-screen');
+        }
+    }
+
+    showFinalReport() {
+        const nameDisplay = document.getElementById('final-name-display');
+        const totalScenarios = document.getElementById('final-total-scenarios');
+        const completionTime = document.getElementById('final-completion-time');
+        const avgScore = document.getElementById('final-avg-score');
+
+        // Calculate completion time
+        const endTime = new Date();
+        const duration = Math.round((endTime - this.startTime) / 60000); // minutes
+
+        // Update display
+        if (nameDisplay) {
+            nameDisplay.textContent = this.studentName !== 'Team Leader' 
+                ? `Congratulations, ${this.studentName}!` 
+                : 'Congratulations!';
+        }
+
+        if (totalScenarios) totalScenarios.textContent = ScenarioData.scenarios.length;
+        if (completionTime) completionTime.textContent = `${duration} minutes`;
+
+        // Note: Score calculation would require numeric scores from AI
+        // For now, we show qualitative completion
+        if (avgScore) {
+            avgScore.textContent = 'Review your feedback for each scenario to see your growth!';
+        }
+
+        // Generate score breakdown (placeholder for now)
+        this.generateScoreBreakdown();
+
+        this.showScreen('final-report-screen');
+    }
+
+    generateScoreBreakdown() {
+        const container = document.getElementById('score-breakdown');
+        if (!container) return;
+
+        container.innerHTML = '<h3>Your Leadership Journey:</h3>';
+
+        this.responses.forEach((response, index) => {
+            const scoreItem = document.createElement('div');
+            scoreItem.className = 'score-item';
+            scoreItem.innerHTML = `
+                <div>
+                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
                 </div>
-            </div>
-
-            <div class="development-recommendations">
-                <h3>📈 Your Personalized Development Plan</h3>
-                <p>${summaryFeedback}</p>
-            </div>
-
-            <h3 class="mt-lg">Scenario-by-Scenario Feedback</h3>
-        `;
-
-        // Add individual scenario feedback
-        this.state.evaluations.forEach((eval, index) => {
-            const response = this.state.responses[index];
-            html += `
-                <div class="scenario-feedback">
-                    <div class="scenario-feedback-header">
-                        <div>
-                            <h4>Scenario ${index + 1}: ${eval.scenarioTitle}</h4>
-                            <p class="text-secondary">${eval.conceptsEvaluated.join(', ')}</p>
-                        </div>
-                        <div class="scenario-score">${eval.score}/5</div>
-                    </div>
-                    
-                    <div class="feedback-section">
-                        <strong>Your Response:</strong>
-                        <p class="text-secondary">${response.response.substring(0, 200)}${response.response.length > 200 ? '...' : ''}</p>
-                    </div>
-                    
-                    <div class="feedback-section">
-                        <strong>Feedback:</strong>
-                        <p class="feedback-text">${eval.feedback}</p>
-                    </div>
-                </div>
+                <div class="score-stars">✓ Completed</div>
             `;
+            container.appendChild(scoreItem);
         });
+    }
 
-        return html;
-    },
+    async generateAIScenario(scenario) {
+        // This will generate a personalized scenario based on previous responses
+        console.log('Generating AI-adaptive scenario for:', scenario.id);
 
-    /**
-     * Download feedback report as text file
-     */
-    downloadReport() {
-        const feedbackData = StorageManager.loadFeedback();
-        
-        if (!feedbackData) {
-            alert('No feedback data available');
-            return;
+        const scenarioText = document.getElementById('scenario-text');
+        if (scenarioText) {
+            scenarioText.innerHTML = '<p><em>Generating personalized scenario based on your previous responses...</em></p>';
         }
 
-        // Create text report
-        let report = 'STRYDE LEADERSHIP COMMUNICATION SIMULATION\n';
-        report += 'FEEDBACK REPORT\n';
-        report += '='.repeat(60) + '\n\n';
-        
-        report += `Completed: ${new Date(feedbackData.completionTime).toLocaleString()}\n`;
-        report += `Started: ${new Date(feedbackData.startTime).toLocaleString()}\n\n`;
-        
-        const avgScore = feedbackData.evaluations.reduce((sum, e) => sum + e.score, 0) / 
-                        feedbackData.evaluations.length;
-        report += `Overall Score: ${avgScore.toFixed(2)}/5 (${((avgScore/5)*100).toFixed(1)}%)\n\n`;
-        
-        report += 'COMPETENCY BREAKDOWN:\n';
-        Object.entries(feedbackData.competencyScores).forEach(([comp, score]) => {
-            if (score > 0) {
-                report += `- ${comp}: ${score.toFixed(1)}%\n`;
+        try {
+            // Analyze previous responses to identify patterns
+            const recentResponses = this.responses.slice(-5); // Last 5 responses
+            
+            // Generate adaptive scenario
+            const adaptiveContent = await generateAdaptiveScenario(
+                scenario,
+                recentResponses,
+                this.studentName
+            );
+
+            // Update scenario with generated content
+            if (scenarioText) {
+                scenarioText.innerHTML = this.formatScenarioText(adaptiveContent);
             }
-        });
-        
-        report += '\n' + '='.repeat(60) + '\n\n';
-        report += 'DEVELOPMENTAL SUMMARY:\n';
-        report += feedbackData.summaryFeedback + '\n\n';
-        
-        report += '='.repeat(60) + '\n\n';
-        report += 'SCENARIO FEEDBACK:\n\n';
-        
-        feedbackData.evaluations.forEach((eval, index) => {
-            report += `SCENARIO ${index + 1}: ${eval.scenarioTitle}\n`;
-            report += `Score: ${eval.score}/5\n`;
-            report += `Concepts: ${eval.conceptsEvaluated.join(', ')}\n\n`;
-            report += `Your Response:\n${feedbackData.responses[index].response}\n\n`;
-            report += `Feedback:\n${eval.feedback}\n\n`;
-            report += '-'.repeat(60) + '\n\n';
-        });
 
-        // Create blob and download
-        const blob = new Blob([report], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `STRYDE_Feedback_${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    },
+        } catch (error) {
+            console.error('Error generating AI scenario:', error);
+            
+            // Fallback to generic scenario
+            if (scenarioText) {
+                scenarioText.innerHTML = `
+                    <p>Based on your responses in previous scenarios, here's a customized leadership challenge:</p>
+                    <p><strong>Your Task:</strong> Reflect on your leadership journey so far. What patterns do you notice in how you communicate? Where have you grown? What areas still challenge you?</p>
+                    <p>Write a response that demonstrates self-awareness and commitment to continued development.</p>
+                `;
+            }
+        }
+    }
 
-    /**
-     * Restart simulation
-     */
     restartSimulation() {
-        if (confirm('Are you sure you want to start a new simulation? This will clear your current progress.')) {
+        const confirm = window.confirm('Are you sure you want to restart? All progress will be lost.');
+        if (confirm) {
             StorageManager.clearProgress();
-            location.reload();
+            this.currentScenarioIndex = 0;
+            this.responses = [];
+            this.studentName = '';
+            this.showScreen('welcome-screen');
         }
-    },
+    }
 
-    /**
-     * Save current progress
-     */
     saveProgress() {
-        const saved = StorageManager.saveProgress(
-            this.state.currentScenarioIndex,
-            this.state.responses,
-            this.state.scenarioHistory,
-			this.state.evaluations
-        );
+        const progressData = {
+            currentScenarioIndex: this.currentScenarioIndex,
+            responses: this.responses,
+            studentName: this.studentName,
+            startTime: this.startTime,
+            lastSaved: new Date()
+        };
+
+        StorageManager.saveProgress(progressData);
+        console.log('Progress saved');
+    }
+
+    checkForSavedProgress() {
+        const savedProgress = StorageManager.loadProgress();
         
-        if (saved) {
-            // Show brief save confirmation
-            const saveBtn = document.getElementById('save-btn');
-            const originalTitle = saveBtn.title;
-            saveBtn.title = '✓ Saved!';
-            saveBtn.style.color = 'var(--success-green)';
-            
-            setTimeout(() => {
-                saveBtn.title = originalTitle;
-                saveBtn.style.color = '';
-            }, 2000);
+        if (savedProgress && savedProgress.responses.length > 0) {
+            const resume = confirm(
+                `Welcome back! You have saved progress from ${new Date(savedProgress.lastSaved).toLocaleString()}.\n\n` +
+                `You were on Scenario ${savedProgress.currentScenarioIndex + 1} of ${ScenarioData.scenarios.length}.\n\n` +
+                `Would you like to resume where you left off?`
+            );
+
+            if (resume) {
+                this.currentScenarioIndex = savedProgress.currentScenarioIndex;
+                this.responses = savedProgress.responses;
+                this.studentName = savedProgress.studentName;
+                this.startTime = new Date(savedProgress.startTime);
+                
+                this.loadScenario(this.currentScenarioIndex);
+                this.showScreen('scenario-screen');
+            }
         }
-    },
+    }
 
-    /**
-     * Show handbook in modal
-     */
-    async showHandbook() {
-        const response = await fetch('data/handbook.html');
-        const content = await response.text();
-        document.getElementById('reference-content').innerHTML = content;
-        document.getElementById('reference-modal').classList.add('active');
-    },
+    showScreen(screenId) {
+        // Hide all screens
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
 
-    /**
-     * Show team profiles in modal
-     */
-    async showProfiles() {
-        // Build profiles HTML from the handbook content we created earlier
-        const profilesHTML = `
-            <h2>STRYDE PULSE Team Member Profiles</h2>
-            <p class="mb-lg">Get to know your cross-functional team members:</p>
-            
-            ${this.buildProfileCard('Dr. Keisha Ramdial', 'Product Innovation Lead (R&D)', 
-                'PhD in Biomechanics, 12 years at STRYDE. Data-driven perfectionist passionate about athlete safety.',
-                'Direct and technical. Expects thorough testing and evidence-based decisions.',
-                'Worried that eco-materials may compromise performance. Skeptical of rushed timelines.')}
-            
-            ${this.buildProfileCard('Andre Baptiste', 'Marketing & Brand Strategist',
-                '8 years at STRYDE. Creative storyteller focused on authentic brand connections.',
-                'Narrative-oriented, empathetic. Prefers face-to-face conversations.',
-                'Concerned about greenwashing accusations. Values brand authenticity above sales.')}
-            
-            ${this.buildProfileCard('Malik Joseph', 'Supply Chain & Operations Manager',
-                '10 years in supply chain, 6 at STRYDE. Pragmatic deadline-driven miracle worker.',
-                'Bottom-line focused. Wants "what, when, how much." Action-oriented.',
-                'New suppliers lack proven track record. Higher costs threaten margins.')}
-            
-            ${this.buildProfileCard('Sadie Persad', 'HR & People Experience Partner',
-                '7 years at STRYDE. Warm, perceptive, emotionally intelligent coach and mediator.',
-                'Reflective, asks open-ended questions. Comfortable with emotional topics.',
-                'Team showing stress signs. Worried about burnout and interpersonal friction.')}
-            
-            ${this.buildProfileCard('Tristen Thompson', 'Finance & Strategy Analyst',
-                '5 years at STRYDE. Sharp analyst from investment banking. Youngest senior analyst ever.',
-                'Numbers-focused, detail-oriented. Uses data to challenge assumptions.',
-                'Current margins below target. Eco-materials 30% more expensive than standard.')}
-        `;
-        
-        document.getElementById('reference-content').innerHTML = profilesHTML;
-        document.getElementById('reference-modal').classList.add('active');
-    },
-
-    /**
-     * Build profile card HTML
-     */
-    buildProfileCard(name, title, background, style, concerns) {
-        return `
-            <div class="scenario-feedback mb-md">
-                <h3 class="text-primary">${name}</h3>
-                <h4 class="text-secondary mb-sm">${title}</h4>
-                <p><strong>Background:</strong> ${background}</p>
-                <p><strong>Communication Style:</strong> ${style}</p>
-                <p><strong>Current Concerns:</strong> ${concerns}</p>
-            </div>
-        `;
-    },
-
-    /**
-     * Show reference materials modal
-     */
-    showReferenceMaterials() {
-        const html = `
-            <h2>Reference Materials</h2>
-            <p>Access key information to help with your responses:</p>
-            <div class="button-group">
-                <button class="btn btn-primary" onclick="SimulationApp.showHandbook()">
-                    📚 Company Handbook
-                </button>
-                <button class="btn btn-primary" onclick="SimulationApp.showProfiles()">
-                    👥 Team Profiles
-                </button>
-            </div>
-        `;
-        document.getElementById('reference-content').innerHTML = html;
-        document.getElementById('reference-modal').classList.add('active');
-    },
-
-    /**
-     * Close modal
-     */
-    closeModal() {
-        document.getElementById('reference-modal').classList.remove('active');
-    },
-
-	/**
-	 * Update word count display (if element exists)
-	 */
-	updateWordCount() {
-		const responseInput = document.getElementById('response-input');
-		const wordCountDisplay = document.getElementById('word-count');
-		
-		if (responseInput && wordCountDisplay) {
-			const text = responseInput.value.trim();
-			const wordCount = text.length > 0 ? text.split(/\s+/).length : 0;
-			wordCountDisplay.textContent = `${wordCount} words`;
-		}
-	},
-
-	/**
-	 * Update progress bar
-	 */
-	updateProgressBar() {
-		const progressFill = document.getElementById('progress-fill');
-		const scenarioCounter = document.getElementById('scenario-counter');
-		
-		if (progressFill) {
-			const percentage = ((this.state.currentScenarioIndex + 1) / this.state.scenarios.length) * 100;
-			progressFill.style.width = `${percentage}%`;
-		}
-		
-		if (scenarioCounter) {
-			scenarioCounter.textContent = `Scenario ${this.state.currentScenarioIndex + 1} of ${this.state.scenarios.length}`;
-		}
-	},
-
-	/**
-	* Show specific screen and hide all others
-	* @param {string} screenId - Screen element ID
-	*/
-	showScreen(screenId) {
-		console.log('Showing screen:', screenId);
-    
-		// Hide ALL screens (remove active class AND set display none)
-		const allScreens = document.querySelectorAll('.screen');
-		allScreens.forEach(screen => {
-			screen.classList.remove('active');
-			screen.style.display = 'none';  // Force hide
-		});
-    
-		// Show target screen (add active class AND set display block)
-		const targetScreen = document.getElementById(screenId);
-		if (targetScreen) {
-			targetScreen.classList.add('active');
-			targetScreen.style.display = 'block';  // Force show
-		} else {
-			console.error('Screen not found:', screenId);
-		}
-	},
-	
-    /**
-     * Update loading status message
-     * @param {string} message - Status message
-     */
-    updateLoadingStatus(message) {
-        const statusElement = document.getElementById('loading-status');
-        if (statusElement) {
-            statusElement.textContent = message;
+        // Show target screen
+        const targetScreen = document.getElementById(screenId);
+        if (targetScreen) {
+            targetScreen.classList.add('active');
         }
-    },
+    }
+}
 
-	/**
-	 * Show AI connection error
-	 */
-	showAIConnectionError() {
-		const loadingScreen = document.getElementById('loading-screen');
-		if (loadingScreen) {
-			loadingScreen.innerHTML = `
-				<div class="container">
-					<div class="logo">STRYDE Athletics</div>
-					<h1 style="color: #dc3545;">⚠️ AI Connection Error</h1>
-				
-					<div class="info-box" style="border-left: 4px solid #dc3545;">
-						<h3>Cannot Connect to AI Service</h3>
-						<p>The simulation requires an AI service (Groq) to evaluate your responses.</p>
-					
-						<h4 style="margin-top: 1.5rem;">Possible Issues:</h4>
-						<ol style="text-align: left; padding-left: 2rem;">
-							<li><strong>API Key Missing or Invalid:</strong>
-								<ul>
-									<li>Check that the Groq API key is set in <code>js/ai-integration.js</code></li>
-									<li>Key should start with <code>gsk_</code></li>
-									<li>Get a free key at: <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></li>
-								</ul>
-							</li>
-							<li><strong>No Internet Connection:</strong>
-								<ul>
-									<li>Groq API requires an active internet connection</li>
-									<li>Check your network connection</li>
-								</ul>
-							</li>
-							<li><strong>Browser Blocking Request:</strong>
-								<ul>
-									<li>Check browser console (F12) for errors</li>
-									<li>Disable browser extensions that might block API calls</li>
-								</ul>
-							</li>
-						</ol>
-					
-						<h4 style="margin-top: 1.5rem;">Console Error Details:</h4>
-						<p style="font-family: monospace; background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px;">
-							Check browser console (F12) for specific error messages.
-						</p>
-					</div>
-				
-					<button class="btn btn-primary" style="margin-top: 2rem;" onclick="location.reload()">
-						↻ Retry Connection
-					</button>
-				</div>
-			`;
-			this.showScreen('loading-screen');
-		}
-	}
-};
-
-// Initialize when page loads
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    SimulationApp.init();
+    window.simulation = new LeadershipSimulation();
 });
