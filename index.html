@@ -184,25 +184,51 @@
         </div>
     </div>
 
-    <!-- Simulation Screen -->
-    <div id="simulation-screen" class="screen">
+    <!-- Scenario Screen -->
+    <div id="scenario-screen" class="screen">
         <div class="container">
             <!-- Progress Bar -->
             <div class="progress-section">
                 <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="progress-fill"></div>
+                    <div class="progress-bar-fill" style="width: 0%">0%</div>
                 </div>
                 <div class="progress-info">
                     <span id="scenario-counter">Scenario 1 of 20</span>
-                    <span id="progress-percentage">5%</span>
+                    <span id="progress-percentage">0% Complete</span>
                 </div>
             </div>
-
+    
             <!-- Scenario Content -->
-            <div id="scenario-content" class="scenario-content">
-                <!-- Scenario will be dynamically inserted here -->
+            <div class="scenario-content">
+                <div class="scenario-header">
+                    <span id="scenario-type" class="scenario-type">Major Scenario</span>
+                    <h2 id="scenario-title">Scenario Title</h2>
+                </div>
+    
+                <!-- Character Card (if applicable) -->
+                <div class="scenario-character" style="display: none;">
+                    <img src="images/malik-joseph.jpg" alt="Team Member">
+                    <div class="scenario-character-info">
+                        <h3>Character Name</h3>
+                        <p>Character Role</p>
+                    </div>
+                </div>
+    
+                <!-- Scenario Text -->
+                <div id="scenario-text" class="scenario-text">
+                    <p>Scenario description will appear here...</p>
+                </div>
+    
+                <!-- Learning Objectives -->
+                <div class="learning-objectives">
+                    <h3>Learning Objectives:</h3>
+                    <ul id="learning-objectives-list">
+                        <li>Objective 1</li>
+                        <li>Objective 2</li>
+                    </ul>
+                </div>
             </div>
-
+    
             <!-- Response Section -->
             <div class="response-section">
                 <div class="response-header">
@@ -212,30 +238,75 @@
                 <textarea 
                     id="response-input" 
                     class="response-input" 
-                    placeholder="Type your response here... Consider the leadership principles from the handbook and the unique perspectives of your team members."
-                    rows="12"
+                    rows="8" 
+                    placeholder="Type your leadership response here... Consider the communication principles from the handbook."
                 ></textarea>
-                <p class="response-hint">💡 Aim for 50-150 words for most effective communication</p>
-                
-                <div class="button-group">
-                    <button id="submit-response" class="btn btn-primary">Submit Response</button>
-                </div>
+                <p class="response-hint">
+                    💡 Tip: Aim for 100-200 words. Be specific, show empathy, and demonstrate leadership thinking.
+                </p>
+                <button id="submit-response" class="btn btn-primary btn-large">
+                    Submit Response
+                </button>
             </div>
         </div>
     </div>
-
+    
     <!-- Feedback Screen -->
     <div id="feedback-screen" class="screen">
         <div class="container">
-            <h2>Response Evaluation</h2>
+            <h2>📊 Your Feedback</h2>
             
-            <div id="feedback-content" class="feedback-content">
-                <!-- Feedback will be dynamically inserted here -->
+            <div class="feedback-content">
+                <div class="feedback-section">
+                    <h3>✅ Strengths</h3>
+                    <div id="feedback-strengths">
+                        <p>Feedback will appear here...</p>
+                    </div>
+                </div>
+    
+                <div class="feedback-section">
+                    <h3>💡 Suggestions for Growth</h3>
+                    <div id="feedback-suggestions">
+                        <p>Suggestions will appear here...</p>
+                    </div>
+                </div>
             </div>
-
+    
+            <div class="scenario-info">
+                <strong>Next:</strong> Scenario 2 of 20
+            </div>
+    
             <div class="button-group">
-                <button id="next-scenario" class="btn btn-primary">Continue to Next Scenario →</button>
-                <button id="finish-simulation" class="btn btn-secondary" style="display: none;">View Final Report</button>
+                <button id="next-scenario" class="btn btn-primary btn-large">
+                    Continue to Next Scenario →
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Final Report Screen -->
+    <div id="final-report-screen" class="screen">
+        <div class="container">
+            <div class="completion-message">
+                <h2 id="final-name-display">🎉 Congratulations!</h2>
+                <p>You've completed the STRYDE Leadership Simulation!</p>
+            </div>
+    
+            <div class="final-stats">
+                <h3>Your Leadership Journey:</h3>
+                <p><strong>Scenarios Completed:</strong> <span id="final-total-scenarios">20</span></p>
+                <p><strong>Time Invested:</strong> <span id="final-completion-time">0</span> minutes</p>
+                <p><strong>Growth Areas Identified:</strong> <span id="final-avg-score">Review your feedback</span></p>
+            </div>
+    
+            <div id="score-breakdown" class="score-breakdown">
+                <!-- Will be populated by JavaScript -->
+            </div>
+    
+            <div class="button-group">
+                <button id="restart-simulation" class="btn btn-secondary">
+                    Start New Simulation
+                </button>
             </div>
         </div>
     </div>
@@ -247,3 +318,4 @@
     <script src="js/simulation.js"></script>
 </body>
 </html>
+
