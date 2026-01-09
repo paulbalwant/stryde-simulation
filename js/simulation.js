@@ -108,6 +108,8 @@ class LeadershipSimulation {
     }
 
     startSimulation() {
+        console.log('=== START SIMULATION CLICKED ===');
+        
         // Get student name (optional)
         const nameInput = document.getElementById('student-name');
         this.studentName = nameInput ? nameInput.value.trim() : '';
@@ -116,7 +118,9 @@ class LeadershipSimulation {
         if (!this.studentName) {
             this.studentName = 'Team Leader';
         }
-
+        
+        console.log('Student name:', this.studentName);
+    
         this.startTime = new Date();
         this.currentScenarioIndex = 0;
         this.responses = [];
@@ -124,11 +128,19 @@ class LeadershipSimulation {
         // Clear any saved progress
         StorageManager.clearProgress();
         
+        console.log('About to load scenario 0...');
+        
         // Load first scenario
         this.loadScenario(0);
+        
+        console.log('About to show scenario screen...');
+        
+        // Force show scenario screen
         this.showScreen('scenario-screen');
+        
+        console.log('=== START SIMULATION COMPLETE ===');
     }
-
+    
     loadScenario(index) {
         const scenario = ScenarioData.scenarios[index];
         if (!scenario) {
@@ -502,17 +514,27 @@ class LeadershipSimulation {
         StorageManager.saveProgress(progressData);
         console.log('Progress saved');
     }
-    
-    showScreen(screenId) {
-        // Hide all screens
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
-        });
 
+    showScreen(screenId) {
+        console.log(`showScreen called: ${screenId}`);
+        
+        // Hide all screens
+        const allScreens = document.querySelectorAll('.screen');
+        console.log(`Found ${allScreens.length} screens`);
+        
+        allScreens.forEach(screen => {
+            screen.classList.remove('active');
+            screen.style.display = 'none'; // Force hide
+        });
+    
         // Show target screen
         const targetScreen = document.getElementById(screenId);
         if (targetScreen) {
+            console.log(`✅ Showing screen: ${screenId}`);
             targetScreen.classList.add('active');
+            targetScreen.style.display = 'block'; // Force show
+        } else {
+            console.error(`❌ Screen not found: ${screenId}`);
         }
     }
 }
@@ -521,4 +543,5 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
