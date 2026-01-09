@@ -19,14 +19,41 @@ class LeadershipSimulation {
         // Show loading screen briefly
         this.showScreen('loading-screen');
         
-        // Simulate loading time
+        // Setup event listeners immediately
+        this.setupEventListeners();
+        
+        // Check for saved progress after brief delay
         setTimeout(() => {
-            this.showScreen('welcome-screen');
-            this.setupEventListeners();
-            this.checkForSavedProgress();
+            const savedProgress = StorageManager.loadProgress();
+            
+            if (savedProgress && savedProgress.responses && savedProgress.responses.length > 0) {
+                // Has saved progress - ask to resume
+                const resume = confirm(
+                    `Welcome back! You have saved progress from ${new Date(savedProgress.lastSaved).toLocaleString()}.\n\n` +
+                    `You were on Scenario ${savedProgress.currentScenarioIndex + 1} of ${ScenarioData.scenarios.length}.\n\n` +
+                    `Would you like to resume where you left off?`
+                );
+    
+                if (resume) {
+                    this.currentScenarioIndex = savedProgress.currentScenarioIndex;
+                    this.responses = savedProgress.responses;
+                    this.studentName = savedProgress.studentName;
+                    this.startTime = new Date(savedProgress.startTime);
+                    
+                    this.loadScenario(this.currentScenarioIndex);
+                    this.showScreen('scenario-screen');
+                } else {
+                    // User declined to resume - show welcome screen
+                    this.showScreen('welcome-screen');
+                }
+            } else {
+                // No saved progress - show welcome screen
+                console.log('No saved progress found');
+                this.showScreen('welcome-screen');
+            }
         }, 1500);
     }
-
+    
     setupEventListeners() {
         // Welcome screen
         const startBtn = document.getElementById('start-simulation');
@@ -474,31 +501,6 @@ class LeadershipSimulation {
 
         StorageManager.saveProgress(progressData);
         console.log('Progress saved');
-    }
-
-    checkForSavedProgress() {
-        const savedProgress = StorageManager.loadProgress();
-        
-        if (savedProgress && savedProgress.responses && savedProgress.responses.length > 0) {
-            const resume = confirm(
-                `Welcome back! You have saved progress from ${new Date(savedProgress.lastSaved).toLocaleString()}.\n\n` +
-                `You were on Scenario ${savedProgress.currentScenarioIndex + 1} of ${ScenarioData.scenarios.length}.\n\n` +
-                `Would you like to resume where you left off?`
-            );
-    
-            if (resume) {
-                this.currentScenarioIndex = savedProgress.currentScenarioIndex;
-                this.responses = savedProgress.responses;
-                this.studentName = savedProgress.studentName;
-                this.startTime = new Date(savedProgress.startTime);
-                
-                this.loadScenario(this.currentScenarioIndex);
-                this.showScreen('scenario-screen');
-            }
-        } else {
-            // No saved progress - this is expected for first run
-            console.log('No saved progress to resume');
-        }
     }
     
     showScreen(screenId) {
