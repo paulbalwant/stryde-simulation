@@ -330,26 +330,61 @@ function analyzeResponsePatterns(responses) {
 function buildAdaptiveScenarioPrompt(scenario, patterns, studentName) {
     const displayName = studentName !== 'Team Leader' ? studentName : 'you';
     
-    return `You are creating a personalized leadership scenario for ${displayName}.
+    return `You are creating a personalized leadership scenario for ${displayName} in the STRYDE PULSE product launch simulation.
 
-SCENARIO TEMPLATE:
-${scenario.text}
+CONTEXT - THE STRYDE PULSE STORY SO FAR:
+- ${displayName} is leading the launch of STRYDE PULSE (eco-engineered running shoes)
+- The team navigated a supplier crisis (3-week delay from Vietnam supplier)
+- Budget pressures required emergency approval from Tristen Thompson (Finance)
+- Team members are: Dr. Keisha Ramdial (R&D), Andre Baptiste (Marketing), Malik Joseph (Operations), Sadie Persad (HR), Tristen Thompson (Finance)
+- Launch is in 2-3 weeks, team is under pressure
+- Previous scenarios covered: crisis management, budget negotiation, supplier relations, team morale, launch decisions
 
-STUDENT PATTERNS:
+STUDENT'S COMMUNICATION PATTERNS:
 - Communication style: ${patterns.communicationStyle}
 - Average response length: ${patterns.avgLength} words
+- This is scenario ${scenario.id} of 20
 
-TASK:
-Create a customized version of this scenario that challenges ${displayName} to grow beyond their current patterns.
+YOUR TASK:
+Create a NEW leadership challenge that:
 
-If they tend to be:
-- Very direct: Add emotional complexity requiring empathy
-- Very empathetic: Add pressure requiring decisive action
-- Very analytical: Add ambiguity requiring intuitive judgment
+1. STAYS IN THE STRYDE PULSE CONTEXT (don't invent mergers, acquisitions, or external employees)
+2. USES ONLY THE 5 TEAM MEMBERS LISTED ABOVE (no made-up names)
+3. CHALLENGES ${displayName}'s development based on their patterns:
+   - If they're very direct: Add emotional complexity requiring empathy
+   - If they're very empathetic: Add pressure requiring decisive action  
+   - If they're very analytical: Add ambiguity requiring intuitive judgment
 
-Keep the core scenario but adapt the details and specific challenges to push ${displayName}'s development.
+4. FOLLOWS THIS EXACT STRUCTURE:
 
-Return ONLY the scenario text, written in second person addressing ${displayName}.`;
+**Scenario Title Idea:** [Brief title related to STRYDE PULSE launch]
+
+**The Situation:**
+[2-3 paragraphs describing a specific challenge involving 1-2 team members. Include concrete details about the STRYDE PULSE launch context. Make it feel real and urgent.]
+
+**What You Know:**
+- [Specific detail about the team member(s) involved]
+- [What's at stake for the STRYDE PULSE launch]
+- [Time pressure or constraint]
+
+**The Challenge:**
+[What makes this situation difficult? What competing priorities exist?]
+
+**Your Task:** [CRYSTAL CLEAR action prompt: "Write an email to...", "Prepare talking points for...", "Draft a message that..."]
+
+EXAMPLES OF GOOD SCENARIOS:
+- "Andre (Marketing) just told you the sustainability blogger agreed to an interview tomorrow, but Keisha (R&D) says the eco-materials data isn't ready to share publicly. You need to decide..."
+- "Malik (Operations) discovered a potential quality issue in 10% of STRYDE PULSE inventory. Launch is in 5 days. Tristen (Finance) says fixing it will cost $50K. What do you communicate to senior management?"
+- "Sadie (HR) just informed you that Keisha hasn't taken a day off in 6 weeks and is showing burnout signs. But Keisha insists she's 'fine' and the launch testing needs her. Write your response..."
+
+CRITICAL RULES:
+- Use ONLY the 5 team members listed
+- Keep it specific to STRYDE PULSE launch
+- End with clear "Your Task:" instruction
+- Make it feel like scenarios 1-10 (same tone, same context)
+- Address ${displayName} directly using "you/your"
+
+Now create the scenario:`;
 }
 
 /**
@@ -358,25 +393,104 @@ Return ONLY the scenario text, written in second person addressing ${displayName
 function getDefaultAdaptiveScenario(scenario, studentName) {
     const displayName = studentName !== 'Team Leader' ? studentName : 'you';
     
-    return `Based on your responses in previous scenarios, here's a leadership challenge tailored for you, ${displayName}:
+    // Different fallbacks for scenarios 11, 12, 13
+    const fallbackScenarios = {
+        11: `**Adaptive Challenge: Media Crisis Response**
 
-**Your Adaptive Challenge:**
+You're 10 days from the STRYDE PULSE launch. A popular fitness influencer with 500K followers just posted: "Excited for @STRYDEAthletics new launch but concerned about their vague sustainability claims. Will they walk the talk?"
 
-Reflect on your leadership journey through the STRYDE PULSE launch. You've navigated crises, managed team conflicts, given feedback, and made difficult decisions.
+**The Situation:**
+Andre Baptiste (Marketing) is panicking. "We need to respond NOW," he says. "Silence looks guilty." He's drafted a defensive response emphasizing your certifications.
 
-**What patterns do you notice in your leadership communication?**
-- Do you tend to prioritize task completion or relationship building?
-- Are you more comfortable with analytical decisions or intuitive judgment?
-- How do you balance directness with empathy?
+But Dr. Keisha Ramdial (R&D) disagrees. "That response is too corporate. Let's invite her to visit our supplier in Vietnam and see our process firsthand. Transparency beats PR spin."
+
+Tristen Thompson (Finance) warns: "Flying an influencer to Vietnam costs $15K we don't have budgeted."
+
+**What You Know:**
+- The influencer has legitimate concerns - your eco-claims ARE real, but complex
+- Andre's response is factually correct but sounds defensive
+- Keisha's idea is bold but expensive and risky (what if she finds something to criticize?)
+- The post already has 5K likes and growing
+- Your senior management is watching how you handle this
+
+**Your Task:** Write your response to the team outlining your decision. Will you: (1) Post Andre's response, (2) Pursue Keisha's transparency approach, (3) Something else? Explain your reasoning and what you'll communicate publicly.`,
+
+        12: `**Adaptive Challenge: Team Member Conflict Escalation**
+
+The tension between Dr. Keisha Ramdial (R&D) and Tristen Thompson (Finance) that you mediated earlier has resurfaced - worse than before.
+
+**The Situation:**
+Yesterday, in a meeting with senior management, Tristen openly questioned Keisha's material choices: "We're paying premium prices for marginal performance gains. It's not financially defensible."
+
+Keisha responded sharply: "Maybe if Finance understood product integrity, we wouldn't have to explain basic science."
+
+The room went silent. Senior management looked uncomfortable.
+
+**What Happened After:**
+- Sadie Persad (HR) pulled you aside: "This is beyond normal disagreement. It's personal now."
+- Andre Baptiste (Marketing) told you he's caught in the middle - both have approached him separately to vent
+- Malik Joseph (Operations) said: "I'm tired of walking on eggshells in meetings"
+- Both Keisha and Tristen are avoiding eye contact with each other
+
+**The Stakes:**
+- Launch is 8 days away
+- You need both of them collaborating on final preparations
+- The team morale is suffering
+- Senior management is questioning your leadership
+
+**Your Task:** You've scheduled a meeting with Keisha and Tristen together (tomorrow, 9am). Write your opening statement for that meeting. How will you address the conflict directly while preserving both relationships and getting them aligned for launch?`,
+
+        13: `**Adaptive Challenge: Unexpected Opportunity**
+
+STRYDE PULSE launches in 6 days. This morning, your CEO forwarded you an email from a major retail chain's buyer.
+
+**The Opportunity:**
+"We saw the STRYDE PULSE preview. We want to place an exclusive order for 10,000 units for our flagship stores nationwide. But we need commitment by Friday (tomorrow) and delivery within 4 weeks of launch."
+
+**The Reality Check:**
+- This order is 3x larger than your initial retail commitments
+- Malik Joseph (Operations): "We can do it, but it'll require diverting 60% of other orders and working our suppliers overtime. It's tight."
+- Tristen Thompson (Finance): "This is a game-changer for our margins. We HAVE to say yes."
+- Dr. Keisha Ramdial (R&D): "Rushing production increases quality risk. We haven't tested at this scale."
+- Andre Baptiste (Marketing): "Our other retail partners will be furious if we prioritize one chain. Relationship damage."
+
+**What You Know:**
+- This could define STRYDE PULSE's success (or failure)
+- Saying yes requires breaking commitments to smaller partners
+- Saying no means missing a massive opportunity
+- Your team is already exhausted - this will push them harder
+- You have 24 hours to decide
+
+**Your Task:** Write your recommendation email to the CEO. Will you accept the order, decline it, or negotiate modified terms? Explain your reasoning, address the risks, and outline what you'd need from the organization to execute your decision.`
+    };
+
+    return fallbackScenarios[scenario.id] || `**Adaptive Challenge: Leadership Reflection**
+
+${displayName}, you've navigated ${scenario.id - 1} scenarios in the STRYDE PULSE launch journey. Now it's time for honest self-reflection.
+
+**Your Leadership Journey So Far:**
+You've handled supplier crises, budget negotiations, team conflicts, burnout concerns, and difficult decisions. Each response revealed something about your leadership style.
 
 **Your Task:**
-Write a reflection that demonstrates self-awareness about your leadership style. Identify:
-1. One strength you've consistently shown
-2. One area where you've grown
-3. One area that still challenges you
-4. How you'll continue developing as a leader
+Write a reflection addressing these questions:
 
-Be honest and specific. The best leaders know themselves deeply.`;
+1. **What patterns do you notice in your leadership communication?**
+   - Do you tend to prioritize tasks or relationships?
+   - Are you more comfortable with data-driven decisions or intuitive judgment?
+   - How do you balance directness with empathy?
+
+2. **Where have you grown most during this simulation?**
+   - Point to a specific scenario where you surprised yourself
+   - What did you learn about yourself as a leader?
+
+3. **What still challenges you?**
+   - Be honest about a leadership skill you're still developing
+   - What makes it difficult?
+
+4. **How will you continue developing?**
+   - What specific actions will you take to strengthen your leadership?
+
+Be specific and authentic. The best leaders know themselves deeply.`;
 }
 
 // Export functions for use in simulation.js
@@ -386,3 +500,4 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
