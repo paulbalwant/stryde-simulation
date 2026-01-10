@@ -19,7 +19,7 @@ async function evaluateResponse(scenario, response, studentName = 'Team Leader')
         const prompt = buildEvaluationPrompt(scenario, response, studentName);
         
         // Call Groq API with retry logic
-        const evaluation = await callGroqWithRetry(prompt);
+        const evaluation = await callGroqWithRetry(prompt, response);
         
         return evaluation;
         
@@ -27,7 +27,7 @@ async function evaluateResponse(scenario, response, studentName = 'Team Leader')
         console.error('Error in evaluateResponse:', error);
         
         // Return fallback evaluation
-        return getFallbackEvaluation(scenario, studentName);
+        return getFallbackEvaluation(scenario, studentName, response);
     }
 }
 
@@ -91,7 +91,7 @@ Keep feedback:
 /**
  * Call Groq API with retry logic
  */
-async function callGroqWithRetry(prompt, maxRetries = 3) {
+async function callGroqWithRetry(prompt, studentResponse = '', maxRetries = 3) {
     let lastError;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -133,7 +133,7 @@ async function callGroqWithRetry(prompt, maxRetries = 3) {
             console.log('Groq API response received successfully');
             
             // Parse the feedback
-            return parseEvaluationResponse(feedbackText);
+            return parseEvaluationResponse(feedbackText, studentResponse);
             
         } catch (error) {
             console.error(`Attempt ${attempt} failed:`, error);
@@ -679,6 +679,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
