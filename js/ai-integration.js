@@ -117,7 +117,7 @@ async function callGroqWithRetry(prompt, studentResponse = '', maxRetries = 3) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                    'Authorization': `Bearer ${getApiKey()}`,
                 },
                 body: JSON.stringify({
                     model: MODEL,
@@ -734,6 +734,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
