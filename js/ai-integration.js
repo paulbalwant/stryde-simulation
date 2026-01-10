@@ -3,21 +3,8 @@
  * Groq API integration with personalized "you" language feedback
  */
 
-// Multiple API keys for load balancing
-const GROQ_API_KEYS = [
-    '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',
-    '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',
-    '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'
-];
-
-// Rotate through keys
-let currentKeyIndex = 0;
-
-function getApiKey() {
-    const key = GROQ_API_KEYS[currentKeyIndex];
-    currentKeyIndex = (currentKeyIndex + 1) % GROQ_API_KEYS.length;
-    return key;
-}
+// Vercel API endpoint (keeps keys private)
+const VERCEL_API_URL = 'https://stryde-simulation.vercel.app/api/evaluate';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
@@ -104,17 +91,18 @@ Keep feedback:
 }
 
 /**
- * Call Groq API with retry logic
+ * Call Vercel API with retry logic
+ * API keys stay private on the server
  */
 async function callGroqWithRetry(prompt, studentResponse = '', maxRetries = 3) {
     let lastError;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            console.log(`Calling API (attempt ${attempt}/${maxRetries})...`);
+            console.log(`Calling Vercel API (attempt ${attempt}/${maxRetries})...`);
             
-            // Call YOUR Vercel function instead of Groq directly
-            const response = await fetch('https://your-project-name.vercel.app/api/evaluate', {
+            // Call YOUR Vercel function (not Groq directly)
+            const response = await fetch(VERCEL_API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -126,27 +114,30 @@ async function callGroqWithRetry(prompt, studentResponse = '', maxRetries = 3) {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(`API Error: ${errorData.error || response.statusText}`);
             }
 
             const data = await response.json();
             
-            // Parse the response
+            // Parse the AI response (data.content contains the feedback)
             return parseEvaluationResponse(data.content, studentResponse);
 
         } catch (error) {
             console.error(`Attempt ${attempt} failed:`, error);
             lastError = error;
             
+            // Wait before retrying (exponential backoff)
             if (attempt < maxRetries) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                const waitTime = 1000 * attempt; // 1s, 2s, 3s
+                console.log(`Waiting ${waitTime}ms before retry...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
             }
         }
     }
     
-    // If all retries failed, use fallback
-    console.error('All API attempts failed, using fallback');
+    // All retries failed - throw error to trigger fallback
+    console.error('All API attempts failed:', lastError);
     throw lastError;
 }
 
@@ -717,6 +708,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
