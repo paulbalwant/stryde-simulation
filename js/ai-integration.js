@@ -155,7 +155,7 @@ async function callGroqWithRetry(prompt, maxRetries = 3) {
 /**
  * Parse AI response into structured feedback with score
  */
-function parseEvaluationResponse(text) {
+function parseEvaluationResponse(text, studentResponse) {
     const evaluation = {
         strengths: '',
         suggestions: '',
@@ -198,6 +198,9 @@ function parseEvaluationResponse(text) {
             evaluation.score = estimateScoreFromFeedback(evaluation.strengths, evaluation.suggestions);
         }
         
+        // ⭐ NEW: Validate score against actual response quality
+        evaluation.score = validateScoreAgainstQuality(evaluation.score, studentResponse, evaluation.suggestions);
+        
         // Ensure score is between 1-5
         evaluation.score = Math.max(1, Math.min(5, evaluation.score));
 
@@ -205,10 +208,128 @@ function parseEvaluationResponse(text) {
         console.error('Error parsing evaluation:', error);
         evaluation.strengths = text.substring(0, 300) + '...';
         evaluation.suggestions = 'Continue developing your leadership communication skills.';
-        evaluation.score = 3; // Default middle score
+        evaluation.score = analyzeResponseQuality(studentResponse); // Use quality analyzer
     }
 
     return evaluation;
+}
+
+/**
+ * Validate AI score against actual response quality
+ * Prevents AI from being too generous with low-effort responses
+ */
+function validateScoreAgainstQuality(aiScore, studentResponse, suggestions) {
+    const qualityScore = analyzeResponseQuality(studentResponse);
+    const suggestionsSeverity = analyzeSuggestionsSeverity(suggestions);
+    
+    // If response quality is very poor, cap the score
+    if (qualityScore <= 1.5) {
+        return Math.min(aiScore, 2.0); // Cap at 2.0 for terrible responses
+    }
+    
+    if (qualityScore <= 2.5) {
+        return Math.min(aiScore, 3.0); // Cap at 3.0 for weak responses
+    }
+    
+    // If suggestions indicate serious problems, reduce score
+    if (suggestionsSeverity === 'severe' && aiScore > 3.0) {
+        return Math.max(qualityScore, aiScore - 1.0);
+    }
+    
+    if (suggestionsSeverity === 'moderate' && aiScore > 4.0) {
+        return Math.min(aiScore, 4.0);
+    }
+    
+    // Otherwise trust AI score but ensure it aligns with quality
+    return Math.max(qualityScore, Math.min(aiScore, qualityScore + 1.5));
+}
+
+/**
+ * Analyze the actual quality of the student's response
+ * Returns a score from 1-5 based on objective metrics
+ */
+function analyzeResponseQuality(response) {
+    if (!response || typeof response !== 'string') return 1;
+    
+    const text = response.trim();
+    const wordCount = text.split(/\s+/).length;
+    const sentenceCount = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+    const avgWordsPerSentence = wordCount / Math.max(sentenceCount, 1);
+    const hasStructure = /\n/.test(text) || text.length > 200;
+    
+    // Extremely low effort (1-10 words, or gibberish like "t", "idk", "ok")
+    if (wordCount <= 10 || /^[a-z]{1,3}$/i.test(text)) {
+        return 1.0;
+    }
+    
+    // Very minimal effort (11-30 words, single sentence)
+    if (wordCount <= 30 && sentenceCount <= 2) {
+        return 1.5;
+    }
+    
+    // Basic effort (31-60 words, lacks structure)
+    if (wordCount <= 60 && !hasStructure) {
+        return 2.0;
+    }
+    
+    // Adequate effort (61-100 words, some structure)
+    if (wordCount <= 100) {
+        return hasStructure ? 3.0 : 2.5;
+    }
+    
+    // Good effort (101-150 words, good structure)
+    if (wordCount <= 150) {
+        return avgWordsPerSentence > 15 ? 3.5 : 3.0;
+    }
+    
+    // Strong effort (151-250 words, well-structured)
+    if (wordCount <= 250) {
+        return avgWordsPerSentence > 12 ? 4.0 : 3.5;
+    }
+    
+    // Excellent effort (250+ words, comprehensive)
+    return avgWordsPerSentence > 10 ? 4.5 : 4.0;
+}
+
+/**
+ * Analyze severity of suggestions to detect if AI identified serious issues
+ */
+function analyzeSuggestionsSeverity(suggestions) {
+    if (!suggestions) return 'minimal';
+    
+    const text = suggestions.toLowerCase();
+    
+    // Severe issues
+    const severeIndicators = [
+        'lacks depth',
+        'misses key',
+        'does not address',
+        'fails to',
+        'no clear',
+        'vague',
+        'unclear',
+        'insufficient',
+        'needs significant',
+        'major gap'
+    ];
+    
+    const severeCount = severeIndicators.filter(indicator => text.includes(indicator)).length;
+    if (severeCount >= 2) return 'severe';
+    
+    // Moderate issues
+    const moderateIndicators = [
+        'could be stronger',
+        'needs more',
+        'consider adding',
+        'would benefit',
+        'missing',
+        'could improve'
+    ];
+    
+    const moderateCount = moderateIndicators.filter(indicator => text.includes(indicator)).length;
+    if (moderateCount >= 2) return 'moderate';
+    
+    return 'minimal';
 }
 
 /**
@@ -558,6 +679,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
