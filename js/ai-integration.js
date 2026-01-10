@@ -145,19 +145,21 @@ async function callGroqWithRetry(prompt, maxRetries = 3) {
 }
 
 /**
- * Parse AI response into structured feedback
+ * Parse AI response into structured feedback with score
  */
 function parseEvaluationResponse(text) {
     const evaluation = {
         strengths: '',
         suggestions: '',
+        score: 0,
         rawResponse: text
     };
 
     try {
         // Split by sections
-        const strengthsMatch = text.match(/STRENGTHS:?\s*([\s\S]*?)(?=SUGGESTIONS:|$)/i);
-        const suggestionsMatch = text.match(/SUGGESTIONS:?\s*([\s\S]*?)$/i);
+        const strengthsMatch = text.match(/STRENGTHS:?\s*([\s\S]*?)(?=SUGGESTIONS:|SCORE:|$)/i);
+        const suggestionsMatch = text.match(/SUGGESTIONS:?\s*([\s\S]*?)(?=SCORE:|$)/i);
+        const scoreMatch = text.match(/SCORE:?\s*(\d+(?:\.\d+)?)\s*(?:\/\s*5|out of 5|stars?)?/i);
 
         if (strengthsMatch && strengthsMatch[1]) {
             evaluation.strengths = strengthsMatch[1].trim();
@@ -165,6 +167,10 @@ function parseEvaluationResponse(text) {
 
         if (suggestionsMatch && suggestionsMatch[1]) {
             evaluation.suggestions = suggestionsMatch[1].trim();
+        }
+
+        if (scoreMatch && scoreMatch[1]) {
+            evaluation.score = parseFloat(scoreMatch[1]);
         }
 
         // Clean up markdown formatting
@@ -178,14 +184,52 @@ function parseEvaluationResponse(text) {
         if (!evaluation.suggestions) {
             evaluation.suggestions = extractSecondParagraph(text);
         }
+        
+        // If no score found, estimate from feedback quality
+        if (!evaluation.score || evaluation.score === 0) {
+            evaluation.score = estimateScoreFromFeedback(evaluation.strengths, evaluation.suggestions);
+        }
+        
+        // Ensure score is between 1-5
+        evaluation.score = Math.max(1, Math.min(5, evaluation.score));
 
     } catch (error) {
         console.error('Error parsing evaluation:', error);
         evaluation.strengths = text.substring(0, 300) + '...';
         evaluation.suggestions = 'Continue developing your leadership communication skills.';
+        evaluation.score = 3; // Default middle score
     }
 
     return evaluation;
+}
+
+/**
+ * Estimate score based on feedback language
+ */
+function estimateScoreFromFeedback(strengths, suggestions) {
+    const text = (strengths + ' ' + suggestions).toLowerCase();
+    
+    // Excellent indicators (4-5 stars)
+    const excellentWords = ['excellent', 'outstanding', 'exceptional', 'strong', 'effectively', 'comprehensive', 'well-structured'];
+    const excellentCount = excellentWords.filter(word => text.includes(word)).length;
+    
+    // Good indicators (3-4 stars)
+    const goodWords = ['good', 'solid', 'demonstrated', 'addressed', 'considered'];
+    const goodCount = goodWords.filter(word => text.includes(word)).length;
+    
+    // Needs improvement indicators (2-3 stars)
+    const improvementWords = ['could improve', 'consider adding', 'missing', 'unclear', 'vague', 'needs'];
+    const improvementCount = improvementWords.filter(word => text.includes(word)).length;
+    
+    // Calculate score
+    if (excellentCount >= 3) return 5;
+    if (excellentCount >= 2) return 4.5;
+    if (excellentCount >= 1 || goodCount >= 3) return 4;
+    if (goodCount >= 2) return 3.5;
+    if (improvementCount >= 3) return 2.5;
+    if (improvementCount >= 2) return 3;
+    
+    return 3.5; // Default good score
 }
 
 /**
@@ -500,4 +544,5 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
