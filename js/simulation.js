@@ -397,6 +397,21 @@ class LeadershipSimulation {
             }
         }
 
+        // ⭐ NEW: Update the "Next" button text
+        const nextButton = document.getElementById('next-scenario');
+        if (nextButton) {
+            const totalScenarios = ScenarioData.scenarios.length;
+            const nextScenarioNum = this.currentScenarioIndex + 2;
+            
+            if (nextScenarioNum > totalScenarios) {
+                // Last scenario - change button text
+                nextButton.textContent = '📊 View Final Report';
+            } else {
+                // Not last scenario - keep normal text
+                nextButton.textContent = `Continue to Next Scenario →`;
+            }
+        }
+      
         // Show feedback screen
         this.showScreen('feedback-screen');
     }
@@ -788,6 +803,7 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
 
