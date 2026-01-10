@@ -16,18 +16,33 @@ class LeadershipSimulation {
     init() {
         console.log('Initializing STRYDE Leadership Simulation...');
         
-        // Show loading screen briefly
+        // Show loading screen briefly        
         this.showScreen('loading-screen');
         
         // Setup event listeners immediately
         this.setupEventListeners();
-        
+
         // Check for saved progress after brief delay
         setTimeout(() => {
             const savedProgress = StorageManager.loadProgress();
             
             if (savedProgress && savedProgress.responses && savedProgress.responses.length > 0) {
-                // Has saved progress - ask to resume
+                // ⭐ NEW: Check if all scenarios completed
+                if (savedProgress.responses.length >= ScenarioData.scenarios.length) {
+                    console.log('All scenarios completed - restoring final report');
+                    
+                    // Restore state
+                    this.currentScenarioIndex = savedProgress.currentScenarioIndex;
+                    this.responses = savedProgress.responses;
+                    this.studentName = savedProgress.studentName;
+                    this.startTime = new Date(savedProgress.startTime);
+                    
+                    // Show final report immediately (no prompt)
+                    this.showFinalReport();
+                    return;
+                }
+                
+                // Has incomplete progress - ask to resume
                 const resume = confirm(
                     `Welcome back! You have saved progress from ${new Date(savedProgress.lastSaved).toLocaleString()}.\n\n` +
                     `You were on Scenario ${savedProgress.currentScenarioIndex + 1} of ${ScenarioData.scenarios.length}.\n\n` +
@@ -43,17 +58,15 @@ class LeadershipSimulation {
                     this.loadScenario(this.currentScenarioIndex);
                     this.showScreen('scenario-screen');
                 } else {
-                    // User declined to resume - show welcome screen
                     this.showScreen('welcome-screen');
                 }
             } else {
-                // No saved progress - show welcome screen
                 console.log('No saved progress found');
                 this.showScreen('welcome-screen');
             }
         }, 1500);
     }
-    
+        
     setupEventListeners() {
         // Welcome screen
         const startBtn = document.getElementById('start-simulation');
@@ -775,6 +788,7 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
 
