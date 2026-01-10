@@ -433,6 +433,73 @@ class LeadershipSimulation {
         this.showScreen('final-report-screen');
     }
 
+    generateComprehensiveReport() {
+        const container = document.getElementById('score-breakdown');
+        if (!container) return;
+    
+        container.innerHTML = '<h3>📋 Your Complete Leadership Journey:</h3>';
+    
+        // Create detailed breakdown for each scenario
+        this.responses.forEach((response, index) => {
+            const scenarioDiv = document.createElement('div');
+            scenarioDiv.className = 'scenario-report-item';
+            scenarioDiv.innerHTML = `
+                <div class="scenario-report-header">
+                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
+                    <span class="scenario-timestamp">${new Date(response.timestamp).toLocaleDateString()}</span>
+                </div>
+                
+                <div class="scenario-feedback-summary">
+                    <div class="feedback-strengths-summary">
+                        <h4>✅ Strengths:</h4>
+                        <p>${response.evaluation.strengths || 'Great effort on this scenario!'}</p>
+                    </div>
+                    
+                    <div class="feedback-suggestions-summary">
+                        <h4>💡 Growth Areas:</h4>
+                        <p>${response.evaluation.suggestions || 'Continue developing your skills.'}</p>
+                    </div>
+                </div>
+                
+                <details class="scenario-response-details">
+                    <summary>View Your Response</summary>
+                    <div class="response-text">
+                        ${response.response}
+                    </div>
+                </details>
+            `;
+            container.appendChild(scenarioDiv);
+        });
+    
+        // Add overall leadership commentary
+        const overallDiv = document.createElement('div');
+        overallDiv.className = 'overall-leadership-commentary';
+        overallDiv.innerHTML = `
+            <h3>🌟 Overall Leadership Development Commentary</h3>
+            <div class="commentary-content">
+                ${this.generateOverallCommentary()}
+            </div>
+        `;
+        container.appendChild(overallDiv);
+    
+        // Add PDF download button
+        const downloadDiv = document.createElement('div');
+        downloadDiv.className = 'download-section';
+        downloadDiv.innerHTML = `
+            <button id="download-pdf-report" class="btn btn-primary btn-large">
+                📥 Download Complete Report (PDF)
+            </button>
+            <p class="download-hint">Get a comprehensive PDF report with all your responses and feedback</p>
+        `;
+        container.appendChild(downloadDiv);
+    
+        // Add download functionality
+        const downloadBtn = document.getElementById('download-pdf-report');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this.downloadPDFReport());
+        }
+    }
+
     generateOverallCommentary() {
         const totalScenarios = this.responses.length;
         const studentName = this.studentName !== 'Team Leader' ? this.studentName : 'You';
@@ -565,92 +632,6 @@ class LeadershipSimulation {
         }, 500);
     }
     
-    generateComprehensiveReport() {
-        const container = document.getElementById('score-breakdown');
-        if (!container) return;
-    
-        container.innerHTML = '<h3>📋 Your Complete Leadership Journey:</h3>';
-    
-        // Create detailed breakdown for each scenario
-        this.responses.forEach((response, index) => {
-            const scenarioDiv = document.createElement('div');
-            scenarioDiv.className = 'scenario-report-item';
-            scenarioDiv.innerHTML = `
-                <div class="scenario-report-header">
-                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
-                    <span class="scenario-timestamp">${new Date(response.timestamp).toLocaleDateString()}</span>
-                </div>
-                
-                <div class="scenario-feedback-summary">
-                    <div class="feedback-strengths-summary">
-                        <h4>✅ Strengths:</h4>
-                        <p>${response.evaluation.strengths || 'Great effort on this scenario!'}</p>
-                    </div>
-                    
-                    <div class="feedback-suggestions-summary">
-                        <h4>💡 Growth Areas:</h4>
-                        <p>${response.evaluation.suggestions || 'Continue developing your skills.'}</p>
-                    </div>
-                </div>
-                
-                <details class="scenario-response-details">
-                    <summary>View Your Response</summary>
-                    <div class="response-text">
-                        ${response.response}
-                    </div>
-                </details>
-            `;
-            container.appendChild(scenarioDiv);
-        });
-    
-        // Add overall leadership commentary
-        const overallDiv = document.createElement('div');
-        overallDiv.className = 'overall-leadership-commentary';
-        overallDiv.innerHTML = `
-            <h3>🌟 Overall Leadership Development Commentary</h3>
-            <div class="commentary-content">
-                ${this.generateOverallCommentary()}
-            </div>
-        `;
-        container.appendChild(overallDiv);
-    
-        // Add PDF download button
-        const downloadDiv = document.createElement('div');
-        downloadDiv.className = 'download-section';
-        downloadDiv.innerHTML = `
-            <button id="download-pdf-report" class="btn btn-primary btn-large">
-                📥 Download Complete Report (PDF)
-            </button>
-            <p class="download-hint">Get a comprehensive PDF report with all your responses and feedback</p>
-        `;
-        container.appendChild(downloadDiv);
-    
-        // Add download functionality
-        const downloadBtn = document.getElementById('download-pdf-report');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadPDFReport());
-        }
-    }
-    
-    generateScoreBreakdown() {
-        const container = document.getElementById('score-breakdown');
-        if (!container) return;
-
-        container.innerHTML = '<h3>Your Leadership Journey:</h3>';
-
-        this.responses.forEach((response, index) => {
-            const scoreItem = document.createElement('div');
-            scoreItem.className = 'score-item';
-            scoreItem.innerHTML = `
-                <div>
-                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
-                </div>
-                <div class="score-stars">✓ Completed</div>
-            `;
-            container.appendChild(scoreItem);
-        });
-    }
-
     async generateAIScenario(scenario) {
         // This will generate a personalized scenario based on previous responses
         console.log('Generating AI-adaptive scenario for:', scenario.id);
@@ -742,6 +723,7 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
 
