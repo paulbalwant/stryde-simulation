@@ -111,59 +111,42 @@ async function callGroqWithRetry(prompt, studentResponse = '', maxRetries = 3) {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            console.log(`Calling Groq API (attempt ${attempt}/${maxRetries})...`);
+            console.log(`Calling API (attempt ${attempt}/${maxRetries})...`);
             
-            const response = await fetch(GROQ_API_URL, {
+            // Call YOUR Vercel function instead of Groq directly
+            const response = await fetch('https://your-project-name.vercel.app/api/evaluate', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getApiKey()}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    model: MODEL,
-                    messages: [
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 1000,
-                    top_p: 1
+                    prompt: prompt,
+                    studentResponse: studentResponse
                 })
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Groq API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+                const errorData = await response.json();
+                throw new Error(`API Error: ${errorData.error || response.statusText}`);
             }
 
             const data = await response.json();
             
-            if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                throw new Error('Invalid response format from Groq API');
-            }
+            // Parse the response
+            return parseEvaluationResponse(data.content, studentResponse);
 
-            const feedbackText = data.choices[0].message.content;
-            console.log('Groq API response received successfully');
-            
-            // Parse the feedback
-            return parseEvaluationResponse(feedbackText, studentResponse);
-            
         } catch (error) {
             console.error(`Attempt ${attempt} failed:`, error);
             lastError = error;
             
-            // Wait before retrying (exponential backoff)
             if (attempt < maxRetries) {
-                const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-                console.log(`Waiting ${waitTime}ms before retry...`);
-                await new Promise(resolve => setTimeout(resolve, waitTime));
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
             }
         }
     }
     
-    // All retries failed
+    // If all retries failed, use fallback
+    console.error('All API attempts failed, using fallback');
     throw lastError;
 }
 
@@ -734,6 +717,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
