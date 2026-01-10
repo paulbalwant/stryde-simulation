@@ -375,7 +375,8 @@ You need to give Andre feedback that helps him grow without damaging his confide
                 "Adaptive learning",
                 "Self-awareness"
             ],
-            isAIGenerated: true
+            isAIGenerated: true,
+            topicHint: 'supplier negotiation and cost management'
         },
 
         {
@@ -391,7 +392,8 @@ You need to give Andre feedback that helps him grow without damaging his confide
                 "Overcoming biases",
                 "Growth mindset"
             ],
-            isAIGenerated: true
+            isAIGenerated: true,
+            topicHint: 'competitive threat or market positioning challenge'
         },
 
         {
@@ -407,7 +409,8 @@ You need to give Andre feedback that helps him grow without damaging his confide
                 "Influence strategies",
                 "Political savvy"
             ],
-            isAIGenerated: true
+            isAIGenerated: true,
+            topicHint: 'quality issue or production defect requiring immediate response'
         },
 
         // ========================================
@@ -696,3 +699,4 @@ You need to give Andre feedback that helps him grow without damaging his confide
         }
     ]
 };
+
