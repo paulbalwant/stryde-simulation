@@ -3,7 +3,22 @@
  * Groq API integration with personalized "you" language feedback
  */
 
-const GROQ_API_KEY = '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';
+// Multiple API keys for load balancing
+const GROQ_API_KEYS = [
+    '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',
+    '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',
+    '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'
+];
+
+// Rotate through keys
+let currentKeyIndex = 0;
+
+function getApiKey() {
+    const key = GROQ_API_KEYS[currentKeyIndex];
+    currentKeyIndex = (currentKeyIndex + 1) % GROQ_API_KEYS.length;
+    return key;
+}
+
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'llama-3.3-70b-versatile';
 
@@ -719,6 +734,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
