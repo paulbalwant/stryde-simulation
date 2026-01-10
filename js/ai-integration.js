@@ -6,9 +6,6 @@
 // Vercel API endpoint (keeps keys private)
 const VERCEL_API_URL = 'https://stryde-simulation.vercel.app/api/evaluate';
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
-
 /**
  * Evaluate a student's response using Groq AI
  * Returns personalized feedback in "you" language
@@ -708,6 +705,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
