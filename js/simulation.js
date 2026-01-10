@@ -406,33 +406,232 @@ class LeadershipSimulation {
         const totalScenarios = document.getElementById('final-total-scenarios');
         const completionTime = document.getElementById('final-completion-time');
         const avgScore = document.getElementById('final-avg-score');
-
+    
         // Calculate completion time
         const endTime = new Date();
         const duration = Math.round((endTime - this.startTime) / 60000); // minutes
-
+    
         // Update display
         if (nameDisplay) {
             nameDisplay.textContent = this.studentName !== 'Team Leader' 
                 ? `Congratulations, ${this.studentName}!` 
                 : 'Congratulations!';
         }
-
+    
         if (totalScenarios) totalScenarios.textContent = ScenarioData.scenarios.length;
         if (completionTime) completionTime.textContent = `${duration} minutes`;
-
-        // Note: Score calculation would require numeric scores from AI
-        // For now, we show qualitative completion
+    
+        // Show qualitative summary
         if (avgScore) {
-            avgScore.textContent = 'Review your feedback for each scenario to see your growth!';
+            avgScore.innerHTML = `You've completed all scenarios and received personalized feedback for each one. Review the detailed breakdown below to see your growth journey.`;
         }
-
-        // Generate score breakdown (placeholder for now)
-        this.generateScoreBreakdown();
-
+    
+        // Generate comprehensive score breakdown with feedback
+        this.generateComprehensiveReport();
+    
+        // Show the screen
         this.showScreen('final-report-screen');
     }
 
+    generateOverallCommentary() {
+        const totalScenarios = this.responses.length;
+        const studentName = this.studentName !== 'Team Leader' ? this.studentName : 'You';
+        
+        // Analyze patterns across all responses
+        const avgResponseLength = Math.round(
+            this.responses.reduce((sum, r) => sum + r.response.split(/\s+/).length, 0) / totalScenarios
+        );
+    
+        return `
+            <p><strong>${studentName} completed ${totalScenarios} leadership scenarios</strong> covering crisis management, 
+            team dynamics, ethical decision-making, stakeholder communication, and strategic thinking.</p>
+            
+            <p><strong>Response Pattern:</strong> Your average response length was ${avgResponseLength} words, 
+            ${avgResponseLength > 150 ? 'showing thorough engagement with complex leadership challenges' : 
+              avgResponseLength > 100 ? 'demonstrating solid consideration of key issues' : 
+              'suggesting opportunities to develop more comprehensive analysis'}.</p>
+            
+            <p><strong>Key Development Areas Identified:</strong></p>
+            <ul>
+                <li><strong>Crisis Communication:</strong> You navigated supplier delays, budget pressures, and quality issues</li>
+                <li><strong>Emotional Intelligence:</strong> You addressed team burnout, gave difficult feedback, and managed conflicts</li>
+                <li><strong>Strategic Decision-Making:</strong> You balanced competing priorities and stakeholder needs</li>
+                <li><strong>Authentic Leadership:</strong> You demonstrated your voice across diverse challenging situations</li>
+            </ul>
+            
+            <p><strong>Next Steps for Continued Growth:</strong></p>
+            <ul>
+                <li>Review the specific suggestions in each scenario - they're tailored to your responses</li>
+                <li>Identify 2-3 patterns in your communication style (directness, empathy, analytical thinking)</li>
+                <li>Practice the scenarios where you received the most developmental feedback</li>
+                <li>Apply these principles in your real leadership roles</li>
+            </ul>
+            
+            <p><strong>Remember:</strong> Leadership communication is a lifelong journey. This simulation provided 
+            20 opportunities to practice - each real leadership moment is another chance to grow. Keep developing 
+            your authentic leadership voice!</p>
+        `;
+    }
+
+    downloadPDFReport() {
+        // Create a printable version
+        const printWindow = window.open('', '_blank');
+        
+        const reportHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>STRYDE Leadership Simulation Report - ${this.studentName}</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        padding: 40px;
+                        max-width: 800px;
+                        margin: 0 auto;
+                    }
+                    h1 { color: #0066cc; border-bottom: 3px solid #00a86b; padding-bottom: 10px; }
+                    h2 { color: #1a2332; margin-top: 30px; }
+                    h3 { color: #0066cc; margin-top: 20px; }
+                    .scenario-item {
+                        border-left: 4px solid #00a86b;
+                        padding-left: 20px;
+                        margin: 30px 0;
+                        page-break-inside: avoid;
+                    }
+                    .strengths { background: #e8f5e9; padding: 15px; margin: 10px 0; border-radius: 8px; }
+                    .suggestions { background: #fff3e0; padding: 15px; margin: 10px 0; border-radius: 8px; }
+                    .response { background: #f5f7fa; padding: 15px; margin: 10px 0; border-radius: 8px; font-size: 0.9em; }
+                    .commentary { background: #e3f2fd; padding: 20px; margin: 30px 0; border-radius: 8px; }
+                    .header-info { color: #666; margin: 20px 0; }
+                    @media print {
+                        body { padding: 20px; }
+                        .scenario-item { page-break-inside: avoid; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>🎯 STRYDE Leadership Simulation Report</h1>
+                
+                <div class="header-info">
+                    <p><strong>Participant:</strong> ${this.studentName}</p>
+                    <p><strong>Completion Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    <p><strong>Scenarios Completed:</strong> ${this.responses.length} of 20</p>
+                    <p><strong>Time Invested:</strong> ${Math.round((new Date() - this.startTime) / 60000)} minutes</p>
+                </div>
+                
+                <h2>📊 Scenario-by-Scenario Feedback</h2>
+                
+                ${this.responses.map((response, index) => `
+                    <div class="scenario-item">
+                        <h3>Scenario ${index + 1}: ${response.scenarioTitle}</h3>
+                        
+                        <div class="strengths">
+                            <strong>✅ Strengths:</strong><br>
+                            ${response.evaluation.strengths || 'Great effort on this scenario!'}
+                        </div>
+                        
+                        <div class="suggestions">
+                            <strong>💡 Growth Areas:</strong><br>
+                            ${response.evaluation.suggestions || 'Continue developing your skills.'}
+                        </div>
+                        
+                        <div class="response">
+                            <strong>Your Response:</strong><br>
+                            ${response.response.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `).join('')}
+                
+                <div class="commentary">
+                    <h2>🌟 Overall Leadership Development Commentary</h2>
+                    ${this.generateOverallCommentary()}
+                </div>
+                
+                <hr style="margin: 40px 0;">
+                <p style="text-align: center; color: #666; font-size: 0.9em;">
+                    Generated by STRYDE Leadership Simulation | ${new Date().toLocaleString()}
+                </p>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(reportHTML);
+        printWindow.document.close();
+        
+        // Auto-trigger print dialog after brief delay
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    }
+    
+    generateComprehensiveReport() {
+        const container = document.getElementById('score-breakdown');
+        if (!container) return;
+    
+        container.innerHTML = '<h3>📋 Your Complete Leadership Journey:</h3>';
+    
+        // Create detailed breakdown for each scenario
+        this.responses.forEach((response, index) => {
+            const scenarioDiv = document.createElement('div');
+            scenarioDiv.className = 'scenario-report-item';
+            scenarioDiv.innerHTML = `
+                <div class="scenario-report-header">
+                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
+                    <span class="scenario-timestamp">${new Date(response.timestamp).toLocaleDateString()}</span>
+                </div>
+                
+                <div class="scenario-feedback-summary">
+                    <div class="feedback-strengths-summary">
+                        <h4>✅ Strengths:</h4>
+                        <p>${response.evaluation.strengths || 'Great effort on this scenario!'}</p>
+                    </div>
+                    
+                    <div class="feedback-suggestions-summary">
+                        <h4>💡 Growth Areas:</h4>
+                        <p>${response.evaluation.suggestions || 'Continue developing your skills.'}</p>
+                    </div>
+                </div>
+                
+                <details class="scenario-response-details">
+                    <summary>View Your Response</summary>
+                    <div class="response-text">
+                        ${response.response}
+                    </div>
+                </details>
+            `;
+            container.appendChild(scenarioDiv);
+        });
+    
+        // Add overall leadership commentary
+        const overallDiv = document.createElement('div');
+        overallDiv.className = 'overall-leadership-commentary';
+        overallDiv.innerHTML = `
+            <h3>🌟 Overall Leadership Development Commentary</h3>
+            <div class="commentary-content">
+                ${this.generateOverallCommentary()}
+            </div>
+        `;
+        container.appendChild(overallDiv);
+    
+        // Add PDF download button
+        const downloadDiv = document.createElement('div');
+        downloadDiv.className = 'download-section';
+        downloadDiv.innerHTML = `
+            <button id="download-pdf-report" class="btn btn-primary btn-large">
+                📥 Download Complete Report (PDF)
+            </button>
+            <p class="download-hint">Get a comprehensive PDF report with all your responses and feedback</p>
+        `;
+        container.appendChild(downloadDiv);
+    
+        // Add download functionality
+        const downloadBtn = document.getElementById('download-pdf-report');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this.downloadPDFReport());
+        }
+    }
+    
     generateScoreBreakdown() {
         const container = document.getElementById('score-breakdown');
         if (!container) return;
@@ -543,5 +742,6 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
