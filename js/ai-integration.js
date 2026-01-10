@@ -508,66 +508,102 @@ function analyzeResponsePatterns(responses) {
 }
 
 /**
- * Build prompt for adaptive scenario generation
+ * Build prompt for AI to generate adaptive scenarios
  */
-function buildAdaptiveScenarioPrompt(scenario, patterns, studentName) {
+function buildAdaptiveScenarioPrompt(scenarioTemplate, recentResponses, studentName) {
     const displayName = studentName !== 'Team Leader' ? studentName : 'you';
     
-    return `You are creating a personalized leadership scenario for ${displayName} in the STRYDE PULSE product launch simulation.
+    // Analyze what topics have been covered
+    const coveredTopics = recentResponses.map(r => r.scenarioTitle).join(', ');
+    
+    // Get specific topic from template
+    const topicHint = scenarioTemplate.topicHint || 'a new leadership challenge';
+    
+    return `You are creating a unique leadership scenario for the STRYDE PULSE product launch simulation.
 
-CONTEXT - THE STRYDE PULSE STORY SO FAR:
-- ${displayName} is leading the launch of STRYDE PULSE (eco-engineered running shoes)
-- The team navigated a supplier crisis (3-week delay from Vietnam supplier)
-- Budget pressures required emergency approval from Tristen Thompson (Finance)
-- Team members are: Dr. Keisha Ramdial (R&D), Andre Baptiste (Marketing), Malik Joseph (Operations), Sadie Persad (HR), Tristen Thompson (Finance)
-- Launch is in 2-3 weeks, team is under pressure
-- Previous scenarios covered: crisis management, budget negotiation, supplier relations, team morale, launch decisions
+**CONTEXT:**
+- STRYDE Athletics is launching STRYDE PULSE (eco-engineered running shoes)
+- Launch is 2 weeks away
+- Team Leader: ${displayName}
+- 5-person cross-functional team:
+  * Dr. Keisha Ramdial (R&D/Product Innovation)
+  * Andre Baptiste (Marketing & Brand Strategy)
+  * Malik Joseph (Supply Chain & Operations)
+  * Sadie Persad (HR & People Experience)
+  * Tristen Thompson (Finance & Strategy)
 
-STUDENT'S COMMUNICATION PATTERNS:
-- Communication style: ${patterns.communicationStyle}
-- Average response length: ${patterns.avgLength} words
-- This is scenario ${scenario.id} of 20
+**TOPICS ALREADY COVERED:**
+${coveredTopics || 'None yet'}
 
-YOUR TASK:
-Create a NEW leadership challenge that:
+**YOUR TASK:**
+Generate a UNIQUE scenario focused on: ${topicHint}
 
-1. STAYS IN THE STRYDE PULSE CONTEXT (don't invent mergers, acquisitions, or external employees)
-2. USES ONLY THE 5 TEAM MEMBERS LISTED ABOVE (no made-up names)
-3. CHALLENGES ${displayName}'s development based on their patterns:
-   - If they're very direct: Add emotional complexity requiring empathy
-   - If they're very empathetic: Add pressure requiring decisive action  
-   - If they're very analytical: Add ambiguity requiring intuitive judgment
+**CRITICAL REQUIREMENTS:**
 
-4. FOLLOWS THIS EXACT STRUCTURE:
+1. **MUST BE DIFFERENT from previous scenarios** - avoid repetition of burnout, stress, or team morale
+2. **MUST include "Your Task:" section** with clear action items
+3. **MUST use ONLY the 5 team members listed** (no invented characters)
+4. **MUST relate to STRYDE PULSE launch specifically**
+5. Keep it realistic and grounded in the case context
 
-**Scenario Title Idea:** [Brief title related to STRYDE PULSE launch]
+**SCENARIO TOPICS TO EXPLORE (pick ONE that hasn't been covered):**
+- Supplier suddenly raises prices for eco-materials (Malik issue)
+- Celebrity athlete wants to partner but demands changes (Andre dilemma)
+- Competitor announces similar product same week (strategic crisis)
+- Factory reports production defect in 15% of units (quality vs timeline)
+- CFO questions sustainability ROI and profit margins (Tristen conflict)
+- Major retailer demands exclusive deal or won't stock product (negotiation)
+- Influencer posts negative review of prototype (brand crisis)
+- Team disagrees on final pricing strategy (decision-making)
+- Environmental certification delayed by 2 weeks (launch timing)
+- Key supplier in Trinidad offers local partnership opportunity (strategic choice)
+
+**STRUCTURE YOUR RESPONSE EXACTLY LIKE THIS:**
 
 **The Situation:**
-[2-3 paragraphs describing a specific challenge involving 1-2 team members. Include concrete details about the STRYDE PULSE launch context. Make it feel real and urgent.]
+[2-3 sentences setting up the specific challenge - be concrete and specific, not generic]
 
-**What You Know:**
-- [Specific detail about the team member(s) involved]
-- [What's at stake for the STRYDE PULSE launch]
-- [Time pressure or constraint]
+**The Details:**
+[Provide 3-4 specific facts, numbers, or quotes that make this scenario real and urgent. Use bullet points.]
 
-**The Challenge:**
-[What makes this situation difficult? What competing priorities exist?]
+**Stakeholder Perspectives:**
+[What do 2-3 team members think about this situation? Include brief quotes or positions.]
 
-**Your Task:** [CRYSTAL CLEAR action prompt: "Write an email to...", "Prepare talking points for...", "Draft a message that..."]
+**Your Task:**
+As Team Leader, you must:
+1. [Specific action item 1]
+2. [Specific action item 2]
+3. [Specific action item 3]
 
-EXAMPLES OF GOOD SCENARIOS:
-- "Andre (Marketing) just told you the sustainability blogger agreed to an interview tomorrow, but Keisha (R&D) says the eco-materials data isn't ready to share publicly. You need to decide..."
-- "Malik (Operations) discovered a potential quality issue in 10% of STRYDE PULSE inventory. Launch is in 5 days. Tristen (Finance) says fixing it will cost $50K. What do you communicate to senior management?"
-- "Sadie (HR) just informed you that Keisha hasn't taken a day off in 6 weeks and is showing burnout signs. But Keisha insists she's 'fine' and the launch testing needs her. Write your response..."
+Consider: [1-2 reflection questions about leadership principles]
 
-CRITICAL RULES:
-- Use ONLY the 5 team members listed
-- Keep it specific to STRYDE PULSE launch
-- End with clear "Your Task:" instruction
-- Make it feel like scenarios 1-10 (same tone, same context)
-- Address ${displayName} directly using "you/your"
+**EXAMPLE OF GOOD SCENARIO:**
 
-Now create the scenario:`;
+**The Situation:**
+Malik just informed you that the Trinidad-based eco-material supplier has offered STRYDE a 20% discount if you commit to a 3-year exclusive partnership with their facility. However, this would mean cutting ties with your current Brazilian supplier, who has been reliable but more expensive. The decision needs to be made by Friday to lock in materials for launch.
+
+**The Details:**
+- Trinidad supplier: 20% cost savings, supports local economy, newer facility with less proven track record
+- Brazilian supplier: 15% more expensive, established relationship, ISO-certified for 10 years, family-owned business that depends on STRYDE's orders
+- Finance (Tristen) is pushing hard for the cost savings to improve margins
+- Marketing (Andre) loves the "Made in Trinidad" story for the brand
+- Operations (Malik) is nervous about switching suppliers 2 weeks before launch
+
+**Stakeholder Perspectives:**
+Tristen (Finance): "This saves us $40,000 on this production run alone. Our margins are already tight - we need this."
+Andre (Marketing): "A Trinidad partnership is authentic and aligns with our brand values. It's a great story."
+Malik (Operations): "I'm worried about switching suppliers this close to launch. What if something goes wrong?"
+
+**Your Task:**
+As Team Leader, you must:
+1. Decide whether to switch to the Trinidad supplier or stay with the Brazilian partner
+2. Communicate your decision to the team with clear rationale
+3. Address concerns from those who disagree with your choice
+4. Create a contingency plan if your decision leads to complications
+
+Consider: How do you balance cost savings, risk management, brand values, and stakeholder relationships in this decision?
+
+**NOW CREATE YOUR UNIQUE SCENARIO** following this structure. Make it specific, concrete, and different from previous scenarios.`;
 }
 
 /**
@@ -683,6 +719,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
