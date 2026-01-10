@@ -63,6 +63,14 @@ STRENGTHS:
 SUGGESTIONS:
 [List 2-3 specific areas for improvement. Use "you" language: "You could strengthen...", "Consider revising your...", "You might improve..."]
 
+SCORE:
+[Provide a numerical score from 1-5 based on the criteria below]
+- 5 stars: Exceptional leadership communication - comprehensive, empathetic, strategic, clear action steps
+- 4 stars: Strong response - addresses key issues well with minor areas for enhancement  
+- 3 stars: Solid effort - demonstrates understanding but needs more depth or clarity
+- 2 stars: Basic response - addresses situation but lacks depth, empathy, or clear direction
+- 1 star: Needs significant development - misses key issues or lacks appropriate communication approach
+
 EVALUATION CRITERIA:
 - Clarity and structure of communication
 - Emotional intelligence and empathy
@@ -268,23 +276,28 @@ function getFallbackEvaluation(scenario, studentName) {
     const fallbacks = {
         'crisis': {
             strengths: `${displayName === 'you' ? 'You' : displayName} addressed the crisis situation and showed awareness of stakeholder concerns. Your response demonstrated an understanding of the urgency and complexity of the situation.`,
-            suggestions: `You could strengthen your response by being more specific about action steps and timelines. Consider how you might provide more concrete reassurance to your team while maintaining transparency about challenges.`
+            suggestions: `You could strengthen your response by being more specific about action steps and timelines. Consider how you might provide more concrete reassurance to your team while maintaining transparency about challenges.`,
+            score: 3.5
         },
         'feedback': {
             strengths: `You showed consideration for the person's feelings and attempted to provide constructive input. Your response demonstrates awareness of the sensitive nature of giving feedback.`,
-            suggestions: `You could enhance your feedback by being more specific with examples and balancing critical observations with recognition of strengths. Consider using more direct language while maintaining empathy.`
+            suggestions: `You could enhance your feedback by being more specific with examples and balancing critical observations with recognition of strengths. Consider using more direct language while maintaining empathy.`,
+            score: 3.5
         },
         'conflict': {
             strengths: `You recognized the conflict and attempted to address it. Your response shows awareness that team dynamics matter and conflicts need attention.`,
-            suggestions: `You could strengthen your conflict resolution approach by being more explicit about finding common ground and facilitating direct communication between parties. Consider how you might create psychological safety for both sides.`
+            suggestions: `You could strengthen your conflict resolution approach by being more explicit about finding common ground and facilitating direct communication between parties. Consider how you might create psychological safety for both sides.`,
+            score: 3
         },
         'decision': {
             strengths: `You worked through the decision-making process and provided reasoning for your choice. Your response shows you're weighing multiple factors and stakeholder perspectives.`,
-            suggestions: `You could improve your decision communication by being more explicit about trade-offs and providing clearer rationale for why you chose this path over alternatives. Consider addressing potential objections more directly.`
+            suggestions: `You could improve your decision communication by being more explicit about trade-offs and providing clearer rationale for why you chose this path over alternatives. Consider addressing potential objections more directly.`,
+            score: 3.5
         },
         'default': {
             strengths: `You engaged thoughtfully with this leadership scenario and demonstrated effort in crafting your response. Your writing shows you're thinking about the complexities of the situation.`,
-            suggestions: `You could strengthen your response by being more specific and concrete in your communication. Consider using more vivid examples and addressing stakeholder concerns more directly.`
+            suggestions: `You could strengthen your response by being more specific and concrete in your communication. Consider using more vivid examples and addressing stakeholder concerns more directly.`,
+            score: 3
         }
     };
 
@@ -305,6 +318,7 @@ function getFallbackEvaluation(scenario, studentName) {
     return {
         strengths: selectedFallback.strengths,
         suggestions: selectedFallback.suggestions,
+        score: selectedFallback.score,
         isFallback: true
     };
 }
@@ -544,5 +558,6 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
