@@ -410,6 +410,9 @@ class LeadershipSimulation {
         // Calculate completion time
         const endTime = new Date();
         const duration = Math.round((endTime - this.startTime) / 60000); // minutes
+        
+        // Calculate average score
+        const averageScore = this.calculateAverageScore();
     
         // Update display
         if (nameDisplay) {
@@ -421,18 +424,21 @@ class LeadershipSimulation {
         if (totalScenarios) totalScenarios.textContent = ScenarioData.scenarios.length;
         if (completionTime) completionTime.textContent = duration;
     
-        // Show qualitative summary
+        // Show average score
         if (avgScore) {
-            avgScore.innerHTML = `You've completed all scenarios and received personalized feedback for each one. Review the detailed breakdown below to see your growth journey.`;
+            avgScore.innerHTML = `
+                <strong>Overall Average:</strong> ${this.generateStars(averageScore)} 
+                <span style="font-size: 1.2em; color: #0066cc; font-weight: bold;">${averageScore.toFixed(1)}/5.0</span>
+            `;
         }
     
-        // Generate comprehensive score breakdown with feedback
+        // Generate comprehensive report with feedback
         this.generateComprehensiveReport();
     
         // Show the screen
         this.showScreen('final-report-screen');
     }
-
+ 
     generateComprehensiveReport() {
         const container = document.getElementById('score-breakdown');
         if (!container) return;
@@ -441,11 +447,17 @@ class LeadershipSimulation {
     
         // Create detailed breakdown for each scenario
         this.responses.forEach((response, index) => {
+            const score = response.evaluation.score || 3;
+            const stars = this.generateStars(score);
+            
             const scenarioDiv = document.createElement('div');
             scenarioDiv.className = 'scenario-report-item';
             scenarioDiv.innerHTML = `
                 <div class="scenario-report-header">
-                    <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
+                    <div>
+                        <strong>Scenario ${index + 1}:</strong> ${response.scenarioTitle}
+                        <div class="scenario-score">${stars} <span class="score-number">${score.toFixed(1)}/5.0</span></div>
+                    </div>
                     <span class="scenario-timestamp">${new Date(response.timestamp).toLocaleDateString()}</span>
                 </div>
                 
@@ -471,11 +483,21 @@ class LeadershipSimulation {
             container.appendChild(scenarioDiv);
         });
     
+        // Calculate overall average score
+        const avgScore = this.calculateAverageScore();
+    
         // Add overall leadership commentary
         const overallDiv = document.createElement('div');
         overallDiv.className = 'overall-leadership-commentary';
         overallDiv.innerHTML = `
-            <h3>🌟 Overall Leadership Development Commentary</h3>
+            <h3>🌟 Overall Leadership Development Summary</h3>
+            <div class="overall-score-display">
+                <div class="overall-score-large">
+                    ${this.generateStars(avgScore)}
+                    <div class="overall-score-number">${avgScore.toFixed(1)}/5.0</div>
+                </div>
+                <p class="score-interpretation">${this.getScoreInterpretation(avgScore)}</p>
+            </div>
             <div class="commentary-content">
                 ${this.generateOverallCommentary()}
             </div>
@@ -500,6 +522,36 @@ class LeadershipSimulation {
         }
     }
 
+    generateStars(score) {
+        const fullStars = Math.floor(score);
+        const hasHalfStar = (score % 1) >= 0.5;
+        const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        
+        let stars = '⭐'.repeat(fullStars);
+        if (hasHalfStar) stars += '⭐'; // Could use ½ star character if available
+        stars += '☆'.repeat(emptyStars);
+        
+        return stars;
+    }
+    
+    calculateAverageScore() {
+        if (this.responses.length === 0) return 0;
+        
+        const totalScore = this.responses.reduce((sum, response) => {
+            return sum + (response.evaluation.score || 3);
+        }, 0);
+        
+        return totalScore / this.responses.length;
+    }
+    
+    getScoreInterpretation(avgScore) {
+        if (avgScore >= 4.5) return "Outstanding leadership communication throughout!";
+        if (avgScore >= 4.0) return "Strong leadership communication with excellent growth!";
+        if (avgScore >= 3.5) return "Solid leadership foundation with clear development!";
+        if (avgScore >= 3.0) return "Good effort with significant learning opportunities!";
+        return "Developing leadership skills - keep practicing!";
+    }
+    
     generateOverallCommentary() {
         const totalScenarios = this.responses.length;
         const studentName = this.studentName !== 'Team Leader' ? this.studentName : 'You';
@@ -723,6 +775,7 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
 
