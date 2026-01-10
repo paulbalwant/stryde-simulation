@@ -391,7 +391,7 @@ function extractSecondParagraph(text) {
 /**
  * Fallback evaluation when API fails
  */
-function getFallbackEvaluation(scenario, studentName) {
+function getFallbackEvaluation(scenario, studentName, studentResponse = '') {
     const displayName = studentName !== 'Team Leader' ? studentName : 'you';
     
     const fallbacks = {
@@ -436,10 +436,14 @@ function getFallbackEvaluation(scenario, studentName) {
         selectedFallback = fallbacks.decision;
     }
 
+    const baseScore = selectedFallback.score;
+    const qualityAdjustedScore = analyzeResponseQuality(studentResponse);
+    const finalScore = Math.min(baseScore, qualityAdjustedScore + 1.0);
+    
     return {
         strengths: selectedFallback.strengths,
         suggestions: selectedFallback.suggestions,
-        score: selectedFallback.score,
+        score: finalScore,
         isFallback: true
     };
 }
@@ -679,6 +683,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
