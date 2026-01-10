@@ -419,7 +419,7 @@ class LeadershipSimulation {
         }
     
         if (totalScenarios) totalScenarios.textContent = ScenarioData.scenarios.length;
-        if (completionTime) completionTime.textContent = `${duration} minutes`;
+        if (completionTime) completionTime.textContent = duration;
     
         // Show qualitative summary
         if (avgScore) {
@@ -723,6 +723,7 @@ class LeadershipSimulation {
 document.addEventListener('DOMContentLoaded', () => {
     window.simulation = new LeadershipSimulation();
 });
+
 
 
 
