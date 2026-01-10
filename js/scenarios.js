@@ -213,7 +213,7 @@ You need to give Andre feedback that helps him grow without damaging his confide
             id: 7,
             title: "Conflict Between Team Members",
             type: "micro",
-            characterImage: null,
+            characterImage: "keisha-tristen-conflict.jpg",
             characterName: "Keisha & Tristen",
             characterRole: "Team Conflict",
             text: `You've noticed growing tension between Dr. Keisha Ramdial (R&D) and Tristen Thompson (Finance). It came to a head in yesterday's meeting when they had a heated disagreement about material costs.
