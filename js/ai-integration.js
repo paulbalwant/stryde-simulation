@@ -435,26 +435,32 @@ function getFallbackEvaluation(scenario, studentName, studentResponse = '') {
 }
 
 /**
- * Generate adaptive AI scenario based on student's response patterns
+ * Generate AI-adaptive scenario based on student's previous responses
  */
-async function generateAdaptiveScenario(scenario, previousResponses, studentName) {
-    console.log('Generating adaptive scenario...');
-    
+async function generateAdaptiveScenario(scenario, recentResponses, studentName) {
     try {
-        // Analyze patterns in previous responses
-        const patterns = analyzeResponsePatterns(previousResponses);
+        console.log('Generating adaptive scenario...');
         
-        // Build prompt for scenario generation
-        const prompt = buildAdaptiveScenarioPrompt(scenario, patterns, studentName);
+        // Build the prompt
+        const prompt = buildAdaptiveScenarioPrompt(scenario, recentResponses, studentName);
         
-        // Call Groq API
-        const response = await callGroqWithRetry(prompt);
+        // Call API (now using Vercel)
+        const response = await callGroqWithRetry(prompt, '', 2); // 2 retries for scenario generation
         
-        return response.strengths; // Using strengths field for scenario text
+        // Extract the scenario content
+        let scenarioContent = response.rawResponse || response.strengths || 'Scenario generation failed';
+        
+        return scenarioContent;
         
     } catch (error) {
         console.error('Error generating adaptive scenario:', error);
-        return getDefaultAdaptiveScenario(scenario, studentName);
+        
+        // Return fallback scenario
+        return `
+            <p>Based on your responses in previous scenarios, here's a customized leadership challenge:</p>
+            <p><strong>Your Task:</strong> Reflect on your leadership journey so far. What patterns do you notice in how you communicate? Where have you grown? What areas still challenge you?</p>
+            <p>Write a response that demonstrates self-awareness and commitment to continued development.</p>
+        `;
     }
 }
 
@@ -705,6 +711,7 @@ if (typeof module !== 'undefined' && module.exports) {
         generateAdaptiveScenario
     };
 }
+
 
 
 
